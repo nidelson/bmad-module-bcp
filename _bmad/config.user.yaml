@@ -1,0 +1,6 @@
+# Bridge YAML mirror of _bmad/config.user.toml.
+# Required by PULSE skills which read `communication_language` for output.
+# Keep in sync with config.user.toml manually until PULSE module supports TOML.
+
+user_name: Nidelson
+communication_language: Português do Brasil

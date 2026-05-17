@@ -1,0 +1,14 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(python3 /Users/nidelson/Projects/nidelson/bmad-module-bcp/.claude/skills/bmad-pulse-setup/scripts/merge-config.py --help)",
+      "Bash(python3 *)",
+      "Bash(gh issue *)",
+      "WebFetch(domain:ciandt.com)",
+      "Bash(curl *)",
+      "Bash(git symbolic-ref *)",
+      "Bash(git add *)",
+      "Bash(git commit -q -m 'chore: initial commit *)"
+    ]
+  }
+}

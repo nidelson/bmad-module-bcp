@@ -1,0 +1,42 @@
+# Bridge YAML mirror of _bmad/config.toml (BMAD 6.6.0).
+# Required by PULSE skills (dashboard, agent-levi, track-start, track-done)
+# which load `{project-root}/_bmad/config.yaml`. Keep in sync with config.toml
+# manually until PULSE module supports TOML natively.
+
+project_name: bmad-module-bcp
+document_output_language: English
+output_folder: '{project-root}/_bmad-output'
+
+pulse:
+  name: PULSE — AI Leverage Monitor
+  description: >-
+    Metrics module that calculates AI Leverage Ratio, first-pass rate, and
+    process health per story. Generates cumulative dashboards with trends and
+    capacity forecasts.
+  version: 0.4.4
+  default_selected: false
+  pulse_estimation_method: hours
+  pulse_story_point_hours_factor: '4.0'
+  pulse_field_estimated_hours: estimated_hours
+  pulse_field_actual_hours: actual_hours
+  pulse_field_dev_count: dev_count
+  pulse_field_review_cycles: review_cycles
+  pulse_field_category: category
+  pulse_dev_categories: standard_4
+  pulse_default_category: fullstack
+  pulse_leverage_threshold_exceptional: '3.0'
+  pulse_leverage_threshold_solid: '1.8'
+  pulse_leverage_warning_threshold: '1.2'
+  pulse_data_strategy: embedded
+  pulse_sprint_status_filename: sprint-status.yaml
+  pulse_data_folder: _bmad-output/implementation-artifacts
+  pulse_dashboard_folder: _bmad-output/implementation-artifacts/pulse-dashboards
+  pulse_dashboard_format: markdown
+  pulse_include_trend_chart: 'yes'
+  pulse_include_capacity_forecast: 'yes'
+  pulse_min_stories_for_trend: '3'
+  pulse_levi_verbosity: standard
+  pulse_levi_coaching_mode: 'yes'
+  pulse_process_health_checks: standard
+  pulse_alert_on_halt: 'yes'
+  pulse_alert_unused_skills: 'yes'

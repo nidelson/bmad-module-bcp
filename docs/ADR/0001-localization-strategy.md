@@ -37,7 +37,7 @@ Adotar uma estratégia **PT-BR-primária para narrativa, EN para superfície de 
 | `README.md` (raiz) | **Casca EN mínima** (vitrine, comando de instalação, link para o README PT-BR) | Preserva findability no GitHub + descoberta por não-brasileiros. |
 | `README.pt-BR.md` | **PT-BR canônico — manual completo** | O documento de onboarding real. |
 | `docs/integration/*.md` (guias de integração PULSE, bmad-create-story) | **PT-BR canônico** + stub de quickstart em EN | Prosa longa segue a audiência. |
-| `ATTRIBUTION.md` | **EN-primário** + espelho PT-BR | Atribuição de licença deve ser inequivocamente parseável em EN, conforme normas CC BY-NC-ND 4.0. |
+| `ATTRIBUTION.md` | **PT-BR canônico**; frase de crédito canônica da CI&T reproduzida verbatim em EN (crédito legal exato exigido pela CC BY-NC-ND, não narrativa) | Revisado 2026-05-17: doc em PT-BR (audiência ~90% CI&T-BR); o BY exige preservar o crédito como publicado — mantido verbatim EN dentro do doc PT-BR. |
 | `CHANGELOG.md` | **EN** (gerenciado por release-please) | Tooling espera EN; espelho PT-BR opcional em `CHANGELOG.pt-BR.md`. |
 | ADRs (`docs/ADR/*.md`) | **Títulos-EN + corpo-PT-BR aceitável** | Híbrido: títulos grepáveis em EN, corpo na língua do autor. Este ADR segue esse padrão. |
 | Docs de tech-refinement (`docs/tech-refinement/`) | **PT-BR canônico** | Trilha de decisão interna. |

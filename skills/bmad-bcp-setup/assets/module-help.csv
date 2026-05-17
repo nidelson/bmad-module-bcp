@@ -1,3 +1,4 @@
 module,skill,display-name,menu-code,description,action,args,phase,after,before,required,output-location,outputs
 BCP,bmad-bcp-setup,Setup,BS,"Instala e configura o módulo BCP no projeto",setup,"",anytime,,,true,,"config.yaml bcp-baseline.yaml customize.toml"
 BCP,bmad-bcp-rule-card,Rule Card,RC,"Exibe a régua BCP (10 elementos × 5 tamanhos)",rule-card,"[elemento]",anytime,,,false,,"régua renderizada + atribuição CC BY-NC-ND"
+BCP,bmad-bcp-score,Score,SC,"Pontua uma story e deriva estimated_hours do score",score,"[story]",anytime,bmad-bcp-setup:setup,,false,,"frontmatter bcp.* + estimated_hours derivado"

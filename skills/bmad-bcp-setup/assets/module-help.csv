@@ -3,3 +3,4 @@ BCP,bmad-bcp-setup,Setup,BS,"Instala e configura o módulo BCP no projeto",setup
 BCP,bmad-bcp-rule-card,Rule Card,RC,"Exibe a régua BCP (10 elementos × 5 tamanhos)",rule-card,"[elemento]",anytime,,,false,,"régua renderizada + atribuição CC BY-NC-ND"
 BCP,bmad-bcp-score,Score,SC,"Pontua uma story e deriva estimated_hours do score",score,"[story]",anytime,bmad-bcp-setup:setup,,false,,"frontmatter bcp.* + estimated_hours derivado"
 BCP,bmad-bcp-score-batch,Score Batch,SB,"Pontua várias stories em lote (retroativo)",score-batch,"[glob]",anytime,bmad-bcp-score:score,,false,,"N frontmatters bcp.* scored_by=retroactive"
+BCP,bmad-bcp-rescore,Rescore,RS,"Repontua uma story já pontuada (total + history + horas)",rescore,"[story]",anytime,bmad-bcp-score:score,,false,,"bcp.* atualizado + bcp.history + estimated_hours"

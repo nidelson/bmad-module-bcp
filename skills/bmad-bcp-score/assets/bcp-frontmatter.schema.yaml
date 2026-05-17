@@ -1,0 +1,70 @@
+# JSON Schema (Draft 2020-12) for the BCP frontmatter contract.
+# BCP writes these keys; PULSE and other readers consume them
+# writer-agnostically. BCP NEVER writes `pulse_metrics`; PULSE NEVER
+# writes `bcp.*`. Keys are EN (interoperability — ADR 0001).
+$schema: "https://json-schema.org/draft/2020-12/schema"
+$id: "https://github.com/nidelson/bmad-module-bcp/schemas/bcp-frontmatter-1.0"
+title: BCP story frontmatter contract
+type: object
+properties:
+  estimated_hours:
+    type: number
+    minimum: 0
+    description: Horas estimadas; BCP sobrescreve (consentimento via install).
+  estimated_hours_pre_bcp:
+    type: number
+    minimum: 0
+    description: Valor original antes do BCP (auditoria; gravado uma única vez).
+  estimated_hours_basis:
+    type: string
+    enum: [bcp, agent]
+    description: Origem da estimativa corrente.
+  bcp:
+    type: object
+    required: [schema_version, rule_version, total, scored_at, scored_by, breakdown]
+    additionalProperties: false
+    properties:
+      schema_version: { type: string }
+      rule_version: { type: string }
+      total:
+        type: integer
+        minimum: 0
+        description: Soma dos pontos Fibonacci do breakdown.
+      scored_at:
+        type: string
+        description: Timestamp ISO 8601 do scoring.
+      scored_by:
+        type: string
+        enum: [bruno, manual, rescore, retroactive]
+      breakdown:
+        type: object
+        description: >-
+          Mapa slug-do-elemento → lista de itens pontuados. Slugs conforme
+          bcp-rule.yaml (business_rules, interface_elements, …).
+        additionalProperties:
+          type: array
+          items:
+            type: object
+            required: [size, points]
+            additionalProperties: false
+            properties:
+              size: { type: string, enum: [XS, S, M, L, XL] }
+              points: { type: integer, enum: [1, 2, 3, 5, 8] }
+              note: { type: string }
+      history:
+        type: array
+        maxItems: 50
+        description: >-
+          Trilha de auditoria de rescores (FIFO, cap 50, warn no truncate).
+          Mais antigo primeiro.
+        items:
+          type: object
+          required: [rule_version, total, scored_at, scored_by]
+          properties:
+            rule_version: { type: string }
+            total: { type: integer, minimum: 0 }
+            scored_at: { type: string }
+            scored_by: { type: string, enum: [bruno, manual, rescore, retroactive] }
+            estimated_hours: { type: number, minimum: 0 }
+            delta_reason: { type: string }
+required: [estimated_hours, estimated_hours_basis, bcp]

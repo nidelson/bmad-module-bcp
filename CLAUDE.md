@@ -58,9 +58,9 @@ Saídas BMAD:
 
 `docs/ADR/0001-localization-strategy.md` define a política. Resumo operacional:
 
-- **EN inegociável:** identificadores de código (nomes de skill, slugs de agente, comandos `/bmad-bcp-*`), chaves YAML/frontmatter/JSON Schema, mensagens de Conventional Commits (apenas o type), nomes de branch, `CHANGELOG.md`, títulos de ADR. `ATTRIBUTION.md` é PT-BR canônico, exceto a frase de crédito canônica da CI&T (verbatim EN — crédito legal exigido pela CC BY-NC-ND).
-- **PT-BR canônico:** `README.pt-BR.md` (manual real), guias de integração, docs de tech-refinement, corpo de ADR, diálogo do agente Bruno, mensagens de erro/prompts, notas de auditoria `bcp.history`.
-- `README.md` (raiz) = casca EN mínima (vitrine + link para o PT-BR).
+- **EN inegociável:** identificadores de código (nomes de skill, slugs de agente, comandos `/bmad-bcp-*`), chaves YAML/frontmatter/JSON Schema, mensagens de Conventional Commits (apenas o type), nomes de branch, títulos de ADR. `CHANGELOG.md` tem estrutura EN (o `type` parseado) mas seções e conteúdo PT-BR. `ATTRIBUTION.md` é PT-BR canônico, exceto a frase de crédito canônica da CI&T (verbatim EN — crédito legal exigido pela CC BY-NC-ND).
+- **PT-BR canônico:** `README.md` (raiz, manual real default), guias de integração, docs de tech-refinement, corpo de ADR, diálogo do agente Bruno, mensagens de erro/prompts, notas de auditoria `bcp.history`.
+- `README.en.md` = casca EN mínima (vitrine + link para o `README.md` PT-BR).
 - Comunicação com o usuário em **Português do Brasil**; `document_output_language` da config = English (afeta artefatos estruturados, não a narrativa).
 
 Commits seguem **Conventional Commits**: o **type em EN conforme a spec** (`feat`, `fix`, `docs`, `chore`, `refactor`, `perf`, `test`, `build`, `ci`, `style`, `revert`) — `release-please`/changelog parseiam o type e a estrutura. O **texto da mensagem (subject + body) pode ser PT-BR**. O changelog gerado refletirá o texto em PT-BR (aceito). Não é necessário anexar resumo EN em PRs.

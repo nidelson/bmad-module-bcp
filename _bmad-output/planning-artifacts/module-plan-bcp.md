@@ -98,7 +98,7 @@ bmad-module-bcp/
 ├── release-please-config.json          # espelho PULSE: release-type simple,
 │                                       #   extra-files bump module.yaml + marketplace.json
 ├── CHANGELOG.md / CODE_OF_CONDUCT.md / CONTRIBUTING.md / SECURITY.md
-└── README.md (shell EN) / README.pt-BR.md (canônico)
+└── README.md (PT-BR canônico, default) / README.en.md (shell EN)
 ```
 
 `release-please-config.json` espelha PULSE: `release-type: simple`,
@@ -383,7 +383,7 @@ de dados (baseline antes de derivação; score antes de rescore/batch).
 - Contract testing BCP↔PULSE + matriz de compatibilidade nos READMEs
 - Fault-injection E2E (PULSE indisponível mid-scoring, `customize.toml`
   corrompido, baseline fora-de-contexto, rescore concorrente)
-- Docs: `README.pt-BR.md` canônico + `README.md` shell EN +
+- Docs: `README.md` PT-BR canônico (default) + `README.en.md` shell EN +
   `docs/integration/{pulse,bmad-create-story}.md` + `ATTRIBUTION.md` +
   scaffold de infra (gitignore, release-please, pyproject, .github) via
   espelho PULSE

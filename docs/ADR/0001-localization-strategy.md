@@ -29,16 +29,16 @@ Adotar uma estratégia **PT-BR-primária para narrativa, EN para superfície de 
 |---|---|---|
 | Identificadores de código (nomes de skill, slugs de agente, paths, comandos `/bmad-bcp-*`) | **EN** | Inegociável. Renomear depois quebra usuários instalados. |
 | Chaves YAML, campos de frontmatter, JSON Schema, estrutura de arquivo baseline | **EN** | Interoperabilidade com o contrato PULSE; amigável a parsers. |
-| Mensagens de Conventional Commits | **EN** | `release-please` e tooling de changelog esperam estrutura EN. |
+| Mensagens de Conventional Commits | **Type EN, texto (subject+body) PT-BR aceito** | `release-please` parseia só o `type`; o texto livre não afeta o tooling. |
 | Nomes de branch | **EN** | Convenção GitHub, scriptável. |
 | Títulos de issue | **PT-BR ou EN, escolha do autor** | Labels (`bug`, `enhancement`, `docs`, `licensing`, `pulse-integration`) permanecem EN para grep-abilidade. |
 | Corpo de issue, threads de discussão, prosa de PR review | **Língua do autor — PT-BR plenamente bem-vindo e esperado de usuários CI&T** | Mantenedor responde na mesma língua do autor. |
 | Descrições de PR | **PT-BR aceito; se o PR entrega feature relevante para changelog, anexar resumo de uma linha em EN para o `release-please`** | Híbrido permanece compatível com o tooling de release. |
-| `README.md` (raiz) | **Casca EN mínima** (vitrine, comando de instalação, link para o README PT-BR) | Preserva findability no GitHub + descoberta por não-brasileiros. |
-| `README.pt-BR.md` | **PT-BR canônico — manual completo** | O documento de onboarding real. |
+| `README.md` (raiz) | **PT-BR canônico — manual completo (default)** | O documento de onboarding real; ~90% dos usuários v0.1.0 são CI&T (pt-BR). |
+| `README.en.md` | **Casca EN mínima** (vitrine, comando de instalação, link para o README PT-BR) | Preserva findability no GitHub + descoberta por não-brasileiros. |
 | `docs/integration/*.md` (guias de integração PULSE, bmad-create-story) | **PT-BR canônico** + stub de quickstart em EN | Prosa longa segue a audiência. |
 | `ATTRIBUTION.md` | **PT-BR canônico**; frase de crédito canônica da CI&T reproduzida verbatim em EN (crédito legal exato exigido pela CC BY-NC-ND, não narrativa) | Revisado 2026-05-17: doc em PT-BR (audiência ~90% CI&T-BR); o BY exige preservar o crédito como publicado — mantido verbatim EN dentro do doc PT-BR. |
-| `CHANGELOG.md` | **EN** (gerenciado por release-please) | Tooling espera EN; espelho PT-BR opcional em `CHANGELOG.pt-BR.md`. |
+| `CHANGELOG.md` | **Estrutura EN, conteúdo PT-BR** — o `type` do Conventional Commit (`feat`/`fix`/...) é EN-inegociável (release-please parseia); os nomes de seção (`Funcionalidades`, `Correções`...) e o texto dos bullets são PT-BR | Coerente com PT-BR default (~90% CI&T). `type` EN preserva o parsing do release-please; `section` é cosmético e livre. |
 | ADRs (`docs/ADR/*.md`) | **Títulos-EN + corpo-PT-BR aceitável** | Híbrido: títulos grepáveis em EN, corpo na língua do autor. Este ADR segue esse padrão. |
 | Docs de tech-refinement (`docs/tech-refinement/`) | **PT-BR canônico** | Trilha de decisão interna. |
 | Diálogo do agente Bruno, prosa de review dry-run, mensagens de erro, prompts ao usuário | **PT-BR primário** | Onde a fricção mora; otimização de UX para a audiência real. |

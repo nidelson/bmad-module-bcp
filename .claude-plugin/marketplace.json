@@ -1,0 +1,38 @@
+{
+  "name": "bmad-module-bcp",
+  "owner": {
+    "name": "Nidelson Gimenez"
+  },
+  "license": "MIT",
+  "homepage": "https://github.com/nidelson/bmad-module-bcp",
+  "repository": "https://github.com/nidelson/bmad-module-bcp",
+  "keywords": [
+    "bmad",
+    "estimation",
+    "business-complexity-points",
+    "bcp",
+    "scoring",
+    "ciandt"
+  ],
+  "plugins": [
+    {
+      "name": "bmad-module-bcp",
+      "source": "./",
+      "description": "Pontua stories com o framework Business Complexity Points da CI&T e deriva estimated_hours a partir do score.",
+      "version": "0.1.0",
+      "author": {
+        "name": "Nidelson Gimenez"
+      },
+      "skills": [
+        "./skills/bmad-bcp-setup",
+        "./skills/bmad-bcp-agent-bruno",
+        "./skills/bmad-bcp-rule-card",
+        "./skills/bmad-bcp-score",
+        "./skills/bmad-bcp-score-batch",
+        "./skills/bmad-bcp-rescore",
+        "./skills/bmad-bcp-recalibrate",
+        "./skills/bmad-bcp-backfill-baseline"
+      ]
+    }
+  ]
+}

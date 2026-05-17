@@ -1,0 +1,83 @@
+code: bcp
+name: BCP — Business Complexity Points Scorer
+header: 'BCP: Business Complexity Points Scorer'
+subheader: >-
+  Pontua stories com o framework Business Complexity Points da CI&T e
+  deriva estimated_hours a partir do score.
+description: >-
+  Módulo de scoring que pontua stories pelo framework Business Complexity
+  Points (BCP) da CI&T, deriva estimated_hours do score, é dono do baseline
+  por categoria e escreve de volta no frontmatter da story. Roda ao lado do
+  módulo irmão PULSE com fronteira de ownership limpa.
+module_version: 0.1.0
+default_selected: false
+module_greeting: >
+  BCP instalado com sucesso! Régua antes de régua.
+
+  Use /bmad-bcp-score para pontuar uma story e /bmad-bcp-rule-card para
+  consultar a régua BCP (10 elementos × 5 tamanhos). Fale com /bmad-bcp-agent-bruno
+  para coaching de scoring.
+
+  Dúvidas e sugestões: https://github.com/nidelson/bmad-module-bcp
+bcp_overwrite_estimated_hours:
+  prompt: >-
+    BCP pode sobrescrever o estimated_hours definido pela Amelia? Instalar o
+    módulo é o consentimento — a auditoria original é preservada em
+    estimated_hours_pre_bcp.
+  default: 'yes'
+  result: '{value}'
+  single-select:
+    - value: 'yes'
+      label: Sim — BCP é a fonte de verdade da estimativa (Recomendado)
+    - value: 'no'
+      label: Não — BCP apenas anexa o bloco bcp.* sem mexer em estimated_hours
+bcp_non_interactive_default:
+  prompt: >-
+    Rodar o scoring em modo não-interativo por padrão (acima do threshold de
+    confiança)?
+  default: 'yes'
+  result: '{value}'
+  single-select:
+    - value: 'yes'
+      label: Sim — auto-score direto, dry-run só em divergência (Recomendado)
+    - value: 'no'
+      label: Não — sempre abrir dry-run review
+bcp_confidence_threshold:
+  prompt: >-
+    Acima de qual confiança (0–1) o scoring pula o dry-run review?
+  default: '0.75'
+  result: '{value}'
+  single-select:
+    - value: '0.6'
+      label: 0.6 — permissivo
+    - value: '0.75'
+      label: 0.75 — equilibrado (Recomendado)
+    - value: '0.9'
+      label: 0.9 — conservador (revisa mais)
+bcp_estimation_basis:
+  prompt: Rótulo gravado em estimated_hours_basis quando o BCP estima?
+  default: bcp
+  result: '{value}'
+bcp_baseline_seed:
+  prompt: >-
+    Seed de horas por BCP para cold start (referência CI&T 2014)?
+  default: '4.13'
+  result: '{value}'
+bcp_baseline_min_samples:
+  prompt: Amostras mínimas antes de uma categoria sair do seed?
+  default: '5'
+  result: '{value}'
+bcp_baseline_rolling_window:
+  prompt: Tamanho da janela FIFO de recalibração do baseline?
+  default: '10'
+  result: '{value}'
+bcp_data_folder:
+  prompt: Pasta onde o baseline e artefatos BCP ficam armazenados?
+  default: '{output_folder}/implementation-artifacts'
+  result: '{value}'
+bcp_baseline_path:
+  prompt: Caminho do arquivo de baseline por categoria?
+  default: '{output_folder}/implementation-artifacts/bcp-baseline.yaml'
+  result: '{value}'
+directories:
+  - '{bcp_data_folder}'

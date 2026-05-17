@@ -63,7 +63,7 @@ Saídas BMAD:
 - `README.md` (raiz) = casca EN mínima (vitrine + link para o PT-BR).
 - Comunicação com o usuário em **Português do Brasil**; `document_output_language` da config = English (afeta artefatos estruturados, não a narrativa).
 
-Commits seguem **Conventional Commits em EN** (`release-please`/changelog esperam estrutura EN). PRs com feature relevante a changelog: anexar resumo de uma linha em EN.
+Commits seguem **Conventional Commits**: o **type em EN conforme a spec** (`feat`, `fix`, `docs`, `chore`, `refactor`, `perf`, `test`, `build`, `ci`, `style`, `revert`) — `release-please`/changelog parseiam o type e a estrutura. O **texto da mensagem (subject + body) pode ser PT-BR**. O changelog gerado refletirá o texto em PT-BR (aceito). Não é necessário anexar resumo EN em PRs.
 
 ## Fluxo Git — Trunk Based Development (vinculante)
 

@@ -1,0 +1,16 @@
+# BCP scoring hook — integração com bmad-create-story
+#
+# Gerado por `bmad-bcp-setup`. Editar por sua conta e risco: re-rodar
+# `/bmad-bcp-setup` aborta quando este arquivo já existe; passe `--force`
+# para regenerar (sobrescreve suas edições).
+#
+# As instruções abaixo são lidas pelo agente BMAD que invoca o workflow
+# `bmad-create-story`. Entram no `persistent_facts` do workflow (semântica
+# de append). Identificadores de skill/campo permanecem em EN; a narrativa
+# operacional é PT-BR (ADR 0001).
+
+[workflow]
+
+persistent_facts = [
+  "Scoring BCP habilitado. Depois que o workflow bmad-create-story gravar o arquivo da story (frontmatter com story_id, category e estimated_hours), invoque a skill bmad-bcp-score passando o caminho da story como argumento (ex.: /bmad-bcp-score docs/stories/5.7.md) ANTES de encerrar. O scoring roda em modo não-interativo por padrão acima do threshold de confiança (config bcp.bcp_confidence_threshold); só abre dry-run review em divergência com a estimativa da Amelia, baixa confiança ou rescore. A skill é idempotente e preserva a trilha de auditoria (estimated_hours_pre_bcp, estimated_hours_basis). Pule a invocação para stories exploratórias/spike sem implementação real.",
+]

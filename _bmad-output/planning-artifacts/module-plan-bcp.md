@@ -150,7 +150,7 @@ reescrever config.
 | Capability | Outcome | Inputs | Outputs |
 |---|---|---|---|
 | Coletar config | Prompts (ou `--headless`/defaults) e gravar config | respostas do usuário / args | `_bmad/config.yaml` (seção `bcp`), `_bmad/config.user.yaml` |
-| Pre-flight diagnostic | Verificar BMAD ≥6.4.0 (capability gate), detectar `bmad-create-story`, detectar PULSE | projeto | relatório de diagnóstico |
+| Pre-flight diagnostic | Verificar BMAD ≥6.6.0 (capability gate via `_bmad/_config/manifest.yaml`), detectar `bmad-create-story`, detectar PULSE | projeto | relatório de diagnóstico |
 | Semear baseline | Criar `bcp-baseline.yaml` com seed 4.13 (referência CI&T 2014), min_samples, rolling_window | config | `_bmad-output/implementation-artifacts/bcp-baseline.yaml` |
 | Registrar Bruno | Adicionar Bruno ao agent manifest + `module-help.csv` | module.yaml | manifest/CSV atualizados |
 | Emitir customize.toml | Gerar override de `bmad-create-story` para encadear scoring BCP | — | `customize.toml` |
@@ -315,7 +315,7 @@ Módulo **exige** config além do core BMad. Espelha o padrão de prompts de
 
 Nenhuma CLI/MCP externa. Scripts Python internos (espelho PULSE):
 `detect_bmad_capability.py`, `merge-config.py`, `inject_customize.py`,
-`cleanup-legacy.py`. Capability gate: **BMAD ≥6.4.0** (espelha PULSE).
+`cleanup-legacy.py`. Capability gate: **BMAD ≥6.6.0** (revisado vs ≥6.4.0 do plano original). Rationale: greenfield sem compat debt; o framework de hooks `customize.toml` (`activation_steps_*`, `persistent_facts`) é a superfície de integração 6.6.0; gate por versão precisa lida de `_bmad/_config/manifest.yaml` (semver real), não por proxy-filesystem como o PULSE.
 Integração opcional com `bmad-create-story` via `customize.toml`.
 
 ## UI and Visualization
@@ -405,7 +405,7 @@ de dados (baseline antes de derivação; score antes de rescore/batch).
 - Espelho PULSE não é literal: PULSE = 5 skills (setup+agente+3 workflows),
   BCP = 8 (setup+agente+6 workflows). Padrões reusados: anti-zombie,
   customize.toml, resolve_customization.py, release-please extra-files,
-  capability gate ≥6.4.0, layout root.
+  capability gate ≥6.6.0 (revisado), layout root.
 - Fora de escopo v0.1.0 (issue #1): auto-recalibrate hook, baselines
   multi-tenant, Web UI/IDE plugin, calibração ML, BCP-as-a-service, Bruno
   standalone CLI, BCP como default de `pulse_estimation_method`.

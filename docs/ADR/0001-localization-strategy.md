@@ -1,89 +1,89 @@
 # ADR 0001 — Localization Strategy: PT-BR Primary for Narrative, EN for Code Surface
 
-| Field | Value |
+| Campo | Valor |
 |---|---|
-| Status | Accepted |
-| Date | 2026-05-08 |
-| Author | Nidelson Gimenez |
-| Reviewers | Paige (BMAD Tech Writer agent), Mary (BMAD Analyst agent) — party-mode round |
-| Supersedes | — |
+| Status | Aceito |
+| Data | 2026-05-08 |
+| Autor | Nidelson Gimenez |
+| Revisores | Paige (agente BMAD Tech Writer), Mary (agente BMAD Analyst) — rodada party-mode |
+| Substitui | — |
 
-## Context
+## Contexto
 
-`bmad-module-bcp` v0.1.0 targets primarily CI&T-shaped organizations adopting BMAD. Internal estimate: ~90% of likely v0.1.0 users are CI&T-internal, where pt-BR is the working language for delivery management, theses, sprint reviews, and most internal documentation. Sibling module `bmad-module-pulse` shipped EN-primary with `README.pt-BR.md` companion.
+O `bmad-module-bcp` v0.1.0 mira primariamente organizações no formato CI&T que adotam BMAD. Estimativa interna: ~90% dos prováveis usuários da v0.1.0 são internos da CI&T, onde pt-BR é a língua de trabalho para gestão de entrega, teses, sprint reviews e a maior parte da documentação interna. O módulo irmão `bmad-module-pulse` foi publicado EN-primário com companheiro `README.pt-BR.md`.
 
-Brief and party-mode rounds surfaced two competing pressures:
+O brief e as rodadas de party-mode trouxeram à tona duas pressões concorrentes:
 
-1. **Friction reduction.** ~90%-CI&T audience reads, writes issues, defends theses, and creates internal artifacts in pt-BR. Forcing EN-first creates translation tax for both maintainer and users.
-2. **Open-source norms and optionality preservation.** "PT-BR-only" closes the door for non-Brazilian CI&T offices (US, UK, Portugal, Singapore, Australia, Japan), for the unvalidated buyer-hypothesis (Head of Delivery / COO of mid-size consultancy outside Brazil), and for tertiary audience (hour-billing consultancies and agencies).
+1. **Redução de fricção.** A audiência ~90%-CI&T lê, escreve issues, defende teses e cria artefatos internos em pt-BR. Forçar EN-primeiro cria imposto de tradução tanto para o mantenedor quanto para os usuários.
+2. **Normas open-source e preservação de opcionalidade.** "PT-BR-only" fecha a porta para escritórios CI&T não-brasileiros (EUA, Reino Unido, Portugal, Singapura, Austrália, Japão), para a hipótese-de-comprador não validada (Head of Delivery / COO de consultoria de médio porte fora do Brasil) e para a audiência terciária (consultorias e agências que faturam por hora).
 
-Mary flagged the "~90% pt-BR" figure as hypothesis, not evidence, and called for three cheap measurements (CI&T headcount by office, working language of squads outside Brazil, BMAD-adjacent geo signal) before betting the strategy on it. Paige proposed a clean code/narrative layering: technical identifiers always in EN, narrative docs PT-BR-canonical with an EN entry shell.
+Mary sinalizou o número "~90% pt-BR" como hipótese, não evidência, e pediu três medições baratas (headcount CI&T por escritório, língua de trabalho de squads fora do Brasil, sinal geográfico adjacente a BMAD) antes de apostar a estratégia nisso. Paige propôs um camadeamento limpo entre código e narrativa: identificadores técnicos sempre em EN, docs narrativos PT-BR-canônicos com uma casca de entrada em EN.
 
-## Decision
+## Decisão
 
-Adopt a **PT-BR-primary for narrative, EN for code surface** strategy for v0.1.0, with explicit governance for the bilingual workflow CI&T users will bring (issues in PT-BR, discussions in PT-BR).
+Adotar uma estratégia **PT-BR-primária para narrativa, EN para superfície de código** na v0.1.0, com governança explícita para o fluxo bilíngue que os usuários CI&T trarão (issues em PT-BR, discussões em PT-BR).
 
-### Policy by artifact type
+### Política por tipo de artefato
 
-| Artifact | Language | Notes |
+| Artefato | Língua | Notas |
 |---|---|---|
-| Code identifiers (skill names, agent slugs, paths, commands `/bmad-bcp-*`) | **EN** | Non-negotiable. Renaming later breaks installed users. |
-| YAML keys, frontmatter fields, JSON Schema, baseline file structure | **EN** | Interoperability with PULSE contract; parser-friendly. |
-| Conventional Commits messages | **EN** | `release-please` and changelog tooling expect EN structure. |
-| Branch names | **EN** | GitHub-conventional, scriptable. |
-| Issue titles | **PT-BR or EN, submitter's choice** | Labels (`bug`, `enhancement`, `docs`, `licensing`, `pulse-integration`) stay EN for grep-ability. |
-| Issue body, discussion threads, PR review prose | **Submitter's language — PT-BR fully welcomed and expected from CI&T users** | Maintainer answers in the same language as the submitter. |
-| PR descriptions | **PT-BR accepted; if PR ships changelog-relevant feature, append a one-line EN summary for `release-please`** | Hybrid stays compatible with release tooling. |
-| `README.md` (root) | **EN-shell mínima** (vitrine, install command, link to PT-BR README) | Preserves GitHub findability + non-Brazilian discoverability. |
-| `README.pt-BR.md` | **PT-BR canônico — full manual** | The real onboarding document. |
-| `docs/integration/*.md` (PULSE, bmad-create-story integration guides) | **PT-BR canônico** + EN quickstart stub | Long-form prose follows audience. |
-| `ATTRIBUTION.md` | **EN-primary** + PT-BR mirror | License attribution must be unambiguously parseable in EN per CC BY-NC-ND 4.0 norms. |
-| `CHANGELOG.md` | **EN** (release-please-managed) | Tooling expects EN; optional PT-BR mirror at `CHANGELOG.pt-BR.md`. |
-| ADRs (`docs/ADR/*.md`) | **EN-titles + PT-BR-body acceptable** | Hybrid: titles greppable in EN, body in author's language. This ADR follows that pattern. |
-| Tech-refinement docs (`docs/tech-refinement/`) | **PT-BR canônico** | Internal decision trail. |
-| Bruno agent dialogue, dry-run review prose, error messages, user-facing prompts | **PT-BR primary** | Where friction lives; UX optimization for the actual audience. |
-| `bcp.history.note` / `delta_reason` / scoring log free-text fields | **Squad's language (default PT-BR)** | Audit trail in language of the people who write it. Structure/keys stay EN. |
-| Bruno auto-score prompt template (`assets/prompts/auto-score.md`) | **EN structure with PT-BR examples** | Prompt engineering benefits from EN scaffolding; few-shot examples in PT-BR for audience fit. |
+| Identificadores de código (nomes de skill, slugs de agente, paths, comandos `/bmad-bcp-*`) | **EN** | Inegociável. Renomear depois quebra usuários instalados. |
+| Chaves YAML, campos de frontmatter, JSON Schema, estrutura de arquivo baseline | **EN** | Interoperabilidade com o contrato PULSE; amigável a parsers. |
+| Mensagens de Conventional Commits | **EN** | `release-please` e tooling de changelog esperam estrutura EN. |
+| Nomes de branch | **EN** | Convenção GitHub, scriptável. |
+| Títulos de issue | **PT-BR ou EN, escolha do autor** | Labels (`bug`, `enhancement`, `docs`, `licensing`, `pulse-integration`) permanecem EN para grep-abilidade. |
+| Corpo de issue, threads de discussão, prosa de PR review | **Língua do autor — PT-BR plenamente bem-vindo e esperado de usuários CI&T** | Mantenedor responde na mesma língua do autor. |
+| Descrições de PR | **PT-BR aceito; se o PR entrega feature relevante para changelog, anexar resumo de uma linha em EN para o `release-please`** | Híbrido permanece compatível com o tooling de release. |
+| `README.md` (raiz) | **Casca EN mínima** (vitrine, comando de instalação, link para o README PT-BR) | Preserva findability no GitHub + descoberta por não-brasileiros. |
+| `README.pt-BR.md` | **PT-BR canônico — manual completo** | O documento de onboarding real. |
+| `docs/integration/*.md` (guias de integração PULSE, bmad-create-story) | **PT-BR canônico** + stub de quickstart em EN | Prosa longa segue a audiência. |
+| `ATTRIBUTION.md` | **EN-primário** + espelho PT-BR | Atribuição de licença deve ser inequivocamente parseável em EN, conforme normas CC BY-NC-ND 4.0. |
+| `CHANGELOG.md` | **EN** (gerenciado por release-please) | Tooling espera EN; espelho PT-BR opcional em `CHANGELOG.pt-BR.md`. |
+| ADRs (`docs/ADR/*.md`) | **Títulos-EN + corpo-PT-BR aceitável** | Híbrido: títulos grepáveis em EN, corpo na língua do autor. Este ADR segue esse padrão. |
+| Docs de tech-refinement (`docs/tech-refinement/`) | **PT-BR canônico** | Trilha de decisão interna. |
+| Diálogo do agente Bruno, prosa de review dry-run, mensagens de erro, prompts ao usuário | **PT-BR primário** | Onde a fricção mora; otimização de UX para a audiência real. |
+| Campos de texto livre `bcp.history.note` / `delta_reason` / log de scoring | **Língua do squad (padrão PT-BR)** | Trilha de auditoria na língua de quem escreve. Estrutura/chaves permanecem EN. |
+| Template de prompt de auto-score do Bruno (`assets/prompts/auto-score.md`) | **Estrutura EN com exemplos PT-BR** | Engenharia de prompt se beneficia de scaffolding EN; exemplos few-shot em PT-BR para encaixe com a audiência. |
 
-## Consequences
+## Consequências
 
-### Positive
+### Positivas
 
-- ~90% audience friction drop on onboarding and daily use.
-- Zero-cost preservation of open-source surface for non-CI&T discoverability (EN README shell, EN identifiers, EN commits) — module remains forkable, scannable, citable.
-- CI&T users contribute issues and PRs in their native language — lower barrier to contribution feedback.
-- Maintainer (single, pt-BR-native) writes once in audience language, no translation tax for v0.1.0.
-- Compatible with `release-please` and standard GitHub tooling.
+- Queda de fricção para ~90% da audiência no onboarding e uso diário.
+- Preservação a custo zero da superfície open-source para descoberta não-CI&T (casca EN do README, identificadores EN, commits EN) — módulo permanece forkável, escaneável, citável.
+- Usuários CI&T contribuem issues e PRs na língua nativa — barreira menor para feedback de contribuição.
+- Mantenedor (único, pt-BR-nativo) escreve uma vez na língua da audiência, sem imposto de tradução na v0.1.0.
+- Compatível com `release-please` e tooling padrão do GitHub.
 
-### Negative / risks
+### Negativas / riscos
 
-- Non-CI&T discoverability for narrative content is reduced; new EN-speaking user lands on EN README shell and may bounce if PT-BR content is the real value.
-- Mary's three evidence gaps remain unvalidated: this ADR bets on the ~90% hypothesis without numerical backing.
-- Potential design partner outside Brazil (CI&T US, UK, etc.) may find the docs surface insufficient. Mitigation: ATTRIBUTION + EN README quickstart cover bare-minimum self-onboarding; full EN translation can be commissioned reactively.
-- Adding full EN parity later is linear effort (~1-2 days per epic per Paige's estimate), but accumulates if v0.1.0 ships many epics before reassessment.
+- A descoberta não-CI&T de conteúdo narrativo é reduzida; novo usuário falante de EN cai na casca EN do README e pode desistir se o conteúdo PT-BR for o valor real.
+- As três lacunas de evidência da Mary permanecem não validadas: este ADR aposta na hipótese ~90% sem respaldo numérico.
+- Potencial design partner fora do Brasil (CI&T EUA, Reino Unido etc.) pode achar a superfície de docs insuficiente. Mitigação: ATTRIBUTION + quickstart EN do README cobrem o auto-onboarding mínimo; tradução EN completa pode ser encomendada reativamente.
+- Adicionar paridade EN completa depois é esforço linear (~1-2 dias por épico, conforme estimativa da Paige), mas acumula se a v0.1.0 publicar muitos épicos antes da reavaliação.
 
-### Reversal cost
+### Custo de reversão
 
-- **Low** for narrative artifacts (translate once when needed).
-- **Zero** for code surface (already in EN).
-- **Low** for issues/PRs (existing threads can be translated on-demand if a non-pt-BR reviewer joins; or simply left as historical record).
+- **Baixo** para artefatos narrativos (traduzir uma vez quando necessário).
+- **Zero** para superfície de código (já em EN).
+- **Baixo** para issues/PRs (threads existentes podem ser traduzidas sob demanda se um revisor não-pt-BR entrar; ou simplesmente mantidas como registro histórico).
 
-### Reassessment trigger
+### Gatilho de reavaliação
 
-This ADR will be revisited at one of the following events, whichever comes first:
+Este ADR será revisitado em um dos seguintes eventos, o que vier primeiro:
 
-1. v0.2.0 planning (~6 months post-v0.1.0).
-2. Design partner identification — if partner office is outside Brazil, schedule reassessment immediately and prioritize EN README + integration guides translation as a v0.1.x patch.
-3. First externally-submitted issue in EN that reveals friction caused by PT-BR-canonical docs.
+1. Planejamento da v0.2.0 (~6 meses após a v0.1.0).
+2. Identificação de design partner — se o escritório do parceiro for fora do Brasil, agendar reavaliação imediatamente e priorizar tradução do README EN + guias de integração como patch v0.1.x.
+3. Primeira issue submetida externamente em EN que revele fricção causada por docs PT-BR-canônicos.
 
-Mary's three evidence-gap measurements (CI&T headcount by office, working language of non-Brazil squads, BMAD-adjacent geo signal) should be collected before reassessment.
+As três medições de lacuna de evidência da Mary (headcount CI&T por escritório, língua de trabalho de squads não-Brasil, sinal geográfico adjacente a BMAD) devem ser coletadas antes da reavaliação.
 
-### Evidence collected so far (partial)
+### Evidência coletada até agora (parcial)
 
-- **CI&T headcount — Brasil: ~7.000 colaboradores** (informed by Nidelson, 2026-05-08). Strengthens the pt-BR concentration hypothesis substantially. Still owed: non-Brazil headcount breakdown (US, UK, Portugal, Singapore, Australia, Japan, China offices) to confirm proportional concentration. Working-language of non-Brazil squads and BMAD-adjacent geo signal remain unmeasured.
+- **Headcount CI&T — Brasil: ~7.000 colaboradores** (informado por Nidelson, 2026-05-08). Reforça substancialmente a hipótese de concentração pt-BR. Ainda pendente: breakdown de headcount não-Brasil (escritórios EUA, Reino Unido, Portugal, Singapura, Austrália, Japão, China) para confirmar a concentração proporcional. Língua de trabalho de squads não-Brasil e sinal geográfico adjacente a BMAD permanecem não medidos.
 
-## Notes for downstream agents
+## Notas para agentes downstream
 
-- Bruno's persona description, catchphrase ("Régua antes de régua"), and coaching dialogue are explicitly designed for pt-BR delivery; EN translation will require persona-faithful re-authoring, not literal translation.
-- Code Connect-style references between PT-BR docs and EN code identifiers should use explicit `lang` frontmatter fields and `translation_of:` pointers when EN counterparts exist.
-- This ADR itself is structured per the bilingual policy: EN headings/identifiers + PT-BR-friendly prose tone for narrative, mirroring the recommended pattern for future ADRs.
+- A descrição de persona do Bruno, o bordão ("Régua antes de régua") e o diálogo de coaching são explicitamente desenhados para entrega em pt-BR; tradução EN exigirá reautoria fiel à persona, não tradução literal.
+- Referências estilo Code Connect entre docs PT-BR e identificadores de código EN devem usar campos de frontmatter `lang` explícitos e ponteiros `translation_of:` quando contrapartes EN existirem.
+- Este próprio ADR é estruturado conforme a política bilíngue: cabeçalhos/identificadores em EN + tom de prosa amigável a PT-BR para narrativa, espelhando o padrão recomendado para ADRs futuros.

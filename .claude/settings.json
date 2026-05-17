@@ -1,0 +1,17 @@
+{
+  "hooks": {
+    "PreToolUse": [
+      {
+        "matcher": "Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "if": "Bash(git *)",
+            "command": "c=$(jq -r '.tool_input.command'); if printf '%s' \"$c\" | grep -qE 'git[[:space:]]+(commit|push)'; then b=$(git rev-parse --abbrev-ref HEAD 2>/dev/null); if [ \"$b\" = \"main\" ]; then printf '{\"hookSpecificOutput\":{\"hookEventName\":\"PreToolUse\",\"permissionDecision\":\"deny\",\"permissionDecisionReason\":\"Trunk Based Development: proibido git commit/push direto na main. Crie um branch (git checkout -b ...), commit e abra PR (gh pr create).\"}}'; fi; fi",
+            "statusMessage": "Verificando branch (TBD)..."
+          }
+        ]
+      }
+    ]
+  }
+}

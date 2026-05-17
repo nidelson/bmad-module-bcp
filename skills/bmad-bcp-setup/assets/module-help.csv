@@ -6,3 +6,4 @@ BCP,bmad-bcp-score-batch,Score Batch,SB,"Pontua várias stories em lote (retroat
 BCP,bmad-bcp-rescore,Rescore,RS,"Repontua uma story já pontuada (total + history + horas)",rescore,"[story]",anytime,bmad-bcp-score:score,,false,,"bcp.* atualizado + bcp.history + estimated_hours"
 BCP,bmad-bcp-recalibrate,Recalibrate,RB,"Recalibra h_per_bcp por categoria com horas reais",recalibrate,"[story|--actual-hours]",anytime,bmad-bcp-score:score,,false,,"bcp-baseline.yaml atualizado (h_per_bcp + is_seed)"
 BCP,bmad-bcp-backfill-baseline,Backfill Baseline,BF,"Mata o cold-start do baseline a partir do histórico do squad",backfill-baseline,"[glob]",anytime,bmad-bcp-recalibrate:recalibrate,,false,,"baseline calibrado a partir do histórico (sai do seed)"
+BCP,bmad-bcp-agent-bruno,Bruno,BR,"Coach de Complexidade BCP (agente facilitador opcional)",agent-bruno,"",anytime,bmad-bcp-setup:setup,,false,,"sessão de coaching de scoring BCP"

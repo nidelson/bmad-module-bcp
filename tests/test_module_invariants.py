@@ -47,17 +47,34 @@ def test_module_code_is_bcp():
     assert data["code"] == "bcp"
 
 
-def test_version_aligned_across_all_sources():
-    """release-please is configured to bump module_version in the two
-    module.yaml files and plugins[0].version in marketplace.json, plus the
-    manifest. They must start aligned or the first release desyncs."""
+def test_module_version_aligned_across_shipped_artifacts():
+    """The three files that *describe the shipped module* must agree —
+    release-please bumps all of them via extra-files, so a drift here
+    means the module advertises inconsistent versions."""
     setup_v = yaml.safe_load(SETUP_MODULE_YAML.read_text())["module_version"]
     root_v = yaml.safe_load(ROOT_MODULE_YAML.read_text())["module_version"]
     market = json.loads(MARKETPLACE.read_text())["plugins"][0]["version"]
+    assert setup_v == root_v == market, (
+        f"version drift: setup={setup_v} root={root_v} marketplace={market}"
+    )
+
+
+def _semver(v: str) -> tuple[int, int, int]:
+    parts = v.split("-")[0].split(".")
+    return tuple(int(p) for p in (parts + ["0", "0", "0"])[:3])
+
+
+def test_release_manifest_is_a_valid_cursor_not_ahead_of_module():
+    """`.release-please-manifest.json` is release-please's *last released*
+    cursor, not the module version. It is intentionally behind the
+    module's version until the first release PR merges (bootstrap: manifest
+    0.0.0 → first release cuts v0.1.0). It must be valid semver and never
+    ahead of what the module advertises."""
     manifest = json.loads(RELEASE_MANIFEST.read_text())["."]
-    assert setup_v == root_v == market == manifest, (
-        f"version drift: setup={setup_v} root={root_v} "
-        f"marketplace={market} manifest={manifest}"
+    module_v = yaml.safe_load(SETUP_MODULE_YAML.read_text())["module_version"]
+    assert _semver(manifest) <= _semver(module_v), (
+        f"manifest cursor {manifest} is ahead of module version "
+        f"{module_v} — release-please would never cut the gap release"
     )
 
 

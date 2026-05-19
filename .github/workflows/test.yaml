@@ -1,0 +1,35 @@
+name: Tests
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  pytest:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v5
+        with:
+          python-version: "3.12"
+
+      - name: Run full suite (co-located unit + repo NFR + integration)
+        # testpaths = ["skills", "tests"] in pyproject.toml, so this runs
+        # every per-script unit test plus the cross-file / contract /
+        # golden / fault-injection suites in one pass.
+        run: uv run --group test pytest -v
+
+      - name: Verify customize hook golden snapshot
+        run: |
+          diff -q \
+            skills/bmad-bcp-setup/assets/customize-templates/bmad-create-story.toml \
+            tests/fixtures/golden/customize-bmad-create-story.toml
+
+      - name: Verify root module.yaml mirrors the setup asset
+        run: |
+          diff -q module.yaml \
+            skills/bmad-bcp-setup/assets/module.yaml

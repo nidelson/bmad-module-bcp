@@ -2,21 +2,21 @@ code: bcp
 name: BCP — Business Complexity Points Scorer
 header: 'BCP: Business Complexity Points Scorer'
 subheader: >-
-  Pontua stories com o framework Business Complexity Points da CI&T e
-  deriva estimated_hours a partir do score.
+  Pontua stories com o framework Business Complexity Points da CI&T e deriva
+  estimated_hours a partir do score.
 description: >-
-  Módulo de scoring que pontua stories pelo framework Business Complexity
-  Points (BCP) da CI&T, deriva estimated_hours do score, é dono do baseline
-  por categoria e escreve de volta no frontmatter da story. Roda ao lado do
-  módulo irmão PULSE com fronteira de ownership limpa.
+  Módulo de scoring que pontua stories pelo framework Business Complexity Points
+  (BCP) da CI&T, deriva estimated_hours do score, é dono do baseline por
+  categoria e escreve de volta no frontmatter da story. Roda ao lado do módulo
+  irmão PULSE com fronteira de ownership limpa.
 module_version: 0.1.0
 default_selected: false
 module_greeting: >
   BCP instalado com sucesso! Régua antes de régua.
 
   Use /bmad-bcp-score para pontuar uma story e /bmad-bcp-rule-card para
-  consultar a régua BCP (10 elementos × 5 tamanhos). Fale com /bmad-bcp-agent-bruno
-  para coaching de scoring.
+  consultar a régua BCP (10 elementos × 5 tamanhos). Fale com
+  /bmad-bcp-agent-bruno para coaching de scoring.
 
   Dúvidas e sugestões: https://github.com/nidelson/bmad-module-bcp
 bcp_overwrite_estimated_hours:
@@ -43,8 +43,7 @@ bcp_non_interactive_default:
     - value: 'no'
       label: Não — sempre abrir dry-run review
 bcp_confidence_threshold:
-  prompt: >-
-    Acima de qual confiança (0–1) o scoring pula o dry-run review?
+  prompt: Acima de qual confiança (0–1) o scoring pula o dry-run review?
   default: '0.75'
   result: '{value}'
   single-select:
@@ -59,8 +58,7 @@ bcp_estimation_basis:
   default: bcp
   result: '{value}'
 bcp_baseline_seed:
-  prompt: >-
-    Seed de horas por BCP para cold start (referência CI&T 2014)?
+  prompt: Seed de horas por BCP para cold start (referência CI&T 2014)?
   default: '4.13'
   result: '{value}'
 bcp_baseline_min_samples:

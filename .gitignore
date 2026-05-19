@@ -1,8 +1,40 @@
+# Dependencies
+node_modules/
+package-lock.json
+pnpm-lock.yaml
+
+# Logs
+*.log
+
+# Environment
+.env
+
+# System
+.DS_Store
+Thumbs.db
+
+# Build output
+build/
+
+# BMad installer-owned (regenerated every install — never committed)
+_bmad/
+# Installed BMAD framework skills (.claude/skills, etc.) — not this module's
+# own skills/ (those ARE committed, no leading dot).
+.*/skills
+
+# NOTE: _bmad-output/ is intentionally NOT ignored — planning-artifacts/
+# (product-brief, module-plan, prd) are tracked deliverables of this
+# planning repo. Only consumer-side generated artifacts would be ignored,
+# and this builder repo produces none.
+
 # Python / test tooling
+.venv/
 __pycache__/
 *.py[cod]
 .pytest_cache/
-.venv/
 # uv resolves the test dependency-group fresh in CI; no committed lockfile
 # (mirrors bmad-module-pulse convention).
 uv.lock
+
+# Implementation plans — controller's working tool, not product artifact
+docs/plans/

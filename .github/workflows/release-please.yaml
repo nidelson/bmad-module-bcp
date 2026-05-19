@@ -1,0 +1,26 @@
+name: release-please
+
+# Manifest-driven releases. release-please watches main, opens a single
+# "release PR" that accumulates Conventional Commits into a PT-BR CHANGELOG
+# (section names configured in release-please-config.json), bumps
+# module_version in both module.yaml files + marketplace.json (extra-files),
+# and on merge cuts the git tag + GitHub release. The config and manifest
+# were shipped in earlier slices (#11/#13) — this workflow is the motor
+# that was missing.
+
+on:
+  push:
+    branches: [main]
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  release-please:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: googleapis/release-please-action@v4
+        with:
+          config-file: release-please-config.json
+          manifest-file: .release-please-manifest.json

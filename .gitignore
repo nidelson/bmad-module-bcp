@@ -1,0 +1,8 @@
+# Python / test tooling
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.venv/
+# uv resolves the test dependency-group fresh in CI; no committed lockfile
+# (mirrors bmad-module-pulse convention).
+uv.lock

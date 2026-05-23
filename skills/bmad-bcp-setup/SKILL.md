@@ -107,7 +107,9 @@ python3 scripts/cleanup-legacy.py --bmad-dir "{project-root}/_bmad" --module-cod
 
 O script verifica que toda skill nos diretórios legacy existe em `.claude/skills/` antes de remover. Idempotente — diretórios ausentes não são erro. Se sair não-zero, mostre o erro e pare. Use `directories_removed` e `files_removed_count` no JSON para o resumo.
 
-## Generate Customize Override (BCP scoring hook)
+## Generate Customize Overrides (BCP hooks)
+
+### Hook 1 — Scoring BCP no `bmad-create-story`
 
 Conecte o scoring BCP ao `bmad-create-story` emitindo um override `customize.toml` no projeto consumidor. Sobrevive a upgrades do BMAD core porque vive em `{project-root}/_bmad/custom/`, que o BMAD nunca sobrescreve. O capability gate ≥6.6.0 já foi validado no início.
 
@@ -115,7 +117,19 @@ Conecte o scoring BCP ao `bmad-create-story` emitindo um override `customize.tom
 python3 scripts/inject_customize.py --project-root "{project-root}" --skill bmad-create-story
 ```
 
-Política de conflito **abort + `--force`**: se o destino já existe, o script sai com exit 3 e não toca no arquivo. Mostre a mensagem verbatim ao usuário (inclui o path e como re-rodar com `--force`). **Não** re-tente com `--force` automaticamente — a escolha é do usuário.
+Política de conflito **abort + `--force`**: se o destino já existe, o script sai com exit 3 e não toca no arquivo. Mostre a mensagem verbatim ao usuário (inclui o path e como re-rodar com `--force`). **Não** re-tente com `--force` automaticamente ��� a escolha é do usuário.
+
+### Hook 2 — Auto-recalibrate no `bmad-code-review` (issue #18)
+
+Conecte o recalibrate BCP ao `bmad-code-review` usando **modo merge** (`--merge`). Este hook acrescenta a instrução de recalibração ao `on_complete` existente — sem sobrescrever o arquivo caso outro módulo (ex.: PULSE) já o tenha registrado. Se o arquivo não existir, cria do zero.
+
+```bash
+python3 scripts/inject_customize.py --project-root "{project-root}" --skill bmad-code-review
+```
+
+O script detecta automaticamente o modo merge para `bmad-code-review`. Exit codes: `0` = sucesso (criou ou fez merge), `1` = já presente (idempotente, sem modificação). Nunca sai com exit 3 em modo merge — não há conflito destrutivo.
+
+**Comportamento em runtime:** ao fim de cada code review, o LLM verifica se a story tem `bcp.total` no frontmatter. Se sim, lê `actual_hours` da seção `pulse_metrics` do sprint-status e invoca `bmad-bcp-recalibrate`. Se qualquer dado estiver ausente, pula silenciosamente. Idempotente — `recalibrate.py` deduplica por `id` da story.
 
 ### .gitignore Allowlist Snippet
 
@@ -132,8 +146,9 @@ Mostre o stdout do script ao usuário.
 Informe:
 
 - "Scoring BCP integrado via `{project-root}/_bmad/custom/bmad-create-story.toml`. Toda story criada por `/bmad-create-story` será pontuada automaticamente."
-- "Para desabilitar: delete o arquivo `{project-root}/_bmad/custom/bmad-create-story.toml`."
-- "Para customizar: edite o arquivo. Re-rodar `/bmad-bcp-setup` aborta se você o alterou — passe `--force` só se quiser restaurar os defaults do BCP."
+- "Auto-recalibrate integrado via `{project-root}/_bmad/custom/bmad-code-review.toml`. A cada code review concluído, o BCP verifica se a story tem dados suficientes para recalibrar o baseline."
+- "Para desabilitar o scoring: delete `{project-root}/_bmad/custom/bmad-create-story.toml`."
+- "Para desabilitar o auto-recalibrate: remova a instrução BCP do `on_complete` em `{project-root}/_bmad/custom/bmad-code-review.toml`."
 
 Se algum passo acima falhar, **não** bloqueie o resto do setup. Reporte a falha e continue — o usuário pode re-rodar a peça que falhou depois.
 

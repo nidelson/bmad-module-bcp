@@ -14,10 +14,18 @@ advisory, contract-invariant validation, and idempotent frontmatter write.
 It NEVER reads or writes `pulse_metrics` — all non-BCP frontmatter keys are
 preserved verbatim (PULSE owns those).
 
-Rescore history: when --sprint-status is provided, history is stored in
-bcp_metrics[story_key].history inside sprint-status.yaml (operational store).
-When omitted, history stays in bcp.history in the story frontmatter with a
-deprecation advisory (backward compat for projects without sprint-status).
+Rescore history operational store (sprint-status.yaml):
+
+  --project-root <path>   Auto-detects sprint-status from BMAD config:
+                          _bmad/config.yaml → output_folder →
+                          pulse.pulse_data_folder + pulse_sprint_status_filename.
+                          If the resolved file exists → sprint-status mode.
+                          If not → legacy mode (history in story frontmatter).
+
+  --sprint-status <path>  Explicit override. Takes precedence over --project-root.
+
+  Neither flag            Legacy mode: history written to bcp.history in story
+                          frontmatter with deprecation advisory on --rescore.
 
 Exit codes: 0=success, 1=validation error, 2=runtime error, 3=conflict
 """
@@ -102,6 +110,38 @@ def validate_breakdown(breakdown: dict, rule_slugs: set[str]) -> int:
     return total
 
 
+def resolve_sprint_status(project_root: Path) -> Path | None:
+    """Derive sprint-status path from BMAD config token chain.
+
+    Chain: project_root → _bmad/config.yaml
+             → output_folder (resolve {project-root})
+               → pulse.pulse_data_folder (resolve {output_folder})
+                 → + pulse_sprint_status_filename
+
+    Returns the resolved Path if the file exists, else None.
+    """
+    config_path = project_root / "_bmad/config.yaml"
+    if not config_path.exists():
+        return None
+    try:
+        cfg = yaml.safe_load(config_path.read_text(encoding="utf-8")) or {}
+    except yaml.YAMLError:
+        return None
+
+    raw_output = str(cfg.get("output_folder", "{project-root}/_bmad-output"))
+    output_folder = raw_output.replace("{project-root}", str(project_root))
+
+    pulse = cfg.get("pulse", {}) or {}
+    raw_data = str(pulse.get("pulse_data_folder",
+                             "{output_folder}/implementation-artifacts"))
+    data_folder = raw_data.replace("{output_folder}", output_folder) \
+                          .replace("{project-root}", str(project_root))
+
+    filename = str(pulse.get("pulse_sprint_status_filename", "sprint-status.yaml"))
+    candidate = Path(data_folder) / filename
+    return candidate if candidate.exists() else None
+
+
 def write_history_to_sprint_status(
     sprint_status_path: Path,
     story_key: str,
@@ -152,15 +192,24 @@ def main() -> int:
                    help="override; defaults to story frontmatter `category`")
     p.add_argument("--rescore", action="store_true",
                    help="archive prior bcp block into history before writing")
+    p.add_argument("--project-root", type=Path, default=None,
+                   help="BMAD project root; sprint-status path is auto-derived "
+                        "from _bmad/config.yaml token chain "
+                        "(output_folder → pulse_data_folder → filename). "
+                        "Ignored when --sprint-status is explicit.")
     p.add_argument("--sprint-status", type=Path, default=None,
-                   help="path to sprint-status.yaml; when provided, rescore "
-                        "history is stored there (bcp_metrics[story_key]) "
-                        "instead of story frontmatter (preferred)")
+                   help="explicit path to sprint-status.yaml (overrides "
+                        "--project-root auto-detection)")
     p.add_argument("--now", default=None, help="ISO timestamp (testing)")
     p.add_argument("--dry-run", action="store_true")
     args = p.parse_args()
 
-    use_sprint_status = args.sprint_status is not None
+    # Resolve sprint-status: explicit flag wins; fallback to auto-detect.
+    sprint_status_path: Path | None = args.sprint_status
+    if sprint_status_path is None and args.project_root is not None:
+        sprint_status_path = resolve_sprint_status(args.project_root)
+
+    use_sprint_status = sprint_status_path is not None
     story_key = args.story.stem
 
     try:
@@ -194,7 +243,7 @@ def main() -> int:
 
     # Load history from the appropriate store.
     if use_sprint_status:
-        history = read_history_from_sprint_status(args.sprint_status, story_key)
+        history = read_history_from_sprint_status(sprint_status_path, story_key)
     else:
         history = list(prev.get("history", [])) if isinstance(prev, dict) else []
         if args.rescore:
@@ -285,8 +334,8 @@ def main() -> int:
 
     try:
         args.story.write_text(render(fm, body, nl), encoding="utf-8")
-        if use_sprint_status and args.sprint_status.exists():
-            write_history_to_sprint_status(args.sprint_status, story_key, history)
+        if use_sprint_status and sprint_status_path.exists():
+            write_history_to_sprint_status(sprint_status_path, story_key, history)
     except (OSError, ValueError, yaml.YAMLError) as e:
         print(json.dumps({"status": "error", "error": str(e)}, indent=2))
         return 2

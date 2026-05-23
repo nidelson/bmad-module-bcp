@@ -262,3 +262,114 @@ def test_sprint_status_idempotent_history(tmp_path: Path):
     assert len(hist) == 2
     assert hist[0]["total"] == 2
     assert hist[1]["total"] == 3
+
+
+# ── --project-root auto-detection (issue #25) ────────────────────────────────
+
+def _bmad_config(tmp_path: Path, output_folder: str | None = None) -> Path:
+    """Write a minimal _bmad/config.yaml with pulse section."""
+    bmad = tmp_path / "_bmad"
+    bmad.mkdir(exist_ok=True)
+    of = output_folder or f"{tmp_path}/_bmad-output"
+    cfg = {
+        "output_folder": of,
+        "pulse": {
+            "pulse_data_folder": "{output_folder}/implementation-artifacts",
+            "pulse_sprint_status_filename": "sprint-status.yaml",
+        },
+    }
+    p = bmad / "config.yaml"
+    p.write_text(yaml.dump(cfg), encoding="utf-8")
+    return p
+
+
+def test_project_root_auto_detects_sprint_status(tmp_path: Path):
+    """--project-root resolves sprint-status path from config token chain."""
+    # Create sprint-status at the derived location
+    impl = tmp_path / "_bmad-output/implementation-artifacts"
+    impl.mkdir(parents=True)
+    sprint = impl / "sprint-status.yaml"
+    sprint.write_text("development_status: {}\n", encoding="utf-8")
+    _bmad_config(tmp_path)
+
+    bcp_block = {"schema_version": "1.0", "rule_version": "1.0",
+                 "total": 2, "scored_at": "2026-01-01T00:00:00Z",
+                 "scored_by": "manual", "breakdown": {}}
+    story = _story(tmp_path, {"category": "backend", "estimated_hours": 10,
+                               "bcp": bcp_block})
+    bd = _bd(tmp_path, {"business_rules": [{"size": "M", "points": 3}]})
+
+    r = run("--story", str(story), "--breakdown", str(bd),
+            "--baseline", str(_baseline(tmp_path)), "--rule", str(_rule(tmp_path)),
+            "--scored-by", "rescore", "--rescore",
+            "--project-root", str(tmp_path))
+    assert r.returncode == 0, r.stderr
+    out = json.loads(r.stdout)
+    assert out["history_store"] == "sprint-status"
+
+    fm = yaml.safe_load(story.read_text().split("---", 2)[1])
+    assert "history" not in fm.get("bcp", {})
+
+    ss = yaml.safe_load(sprint.read_text())
+    assert story.stem in ss.get("bcp_metrics", {})
+
+
+def test_project_root_falls_back_to_legacy_when_sprint_status_missing(tmp_path: Path):
+    """--project-root with no sprint-status file → legacy mode, no error."""
+    _bmad_config(tmp_path)  # config exists but sprint-status does not
+
+    story = _story(tmp_path, {"category": "backend", "estimated_hours": 10})
+    bd = _bd(tmp_path, {"business_rules": [{"size": "M", "points": 3}]})
+
+    r = run("--story", str(story), "--breakdown", str(bd),
+            "--baseline", str(_baseline(tmp_path)), "--rule", str(_rule(tmp_path)),
+            "--scored-by", "manual",
+            "--project-root", str(tmp_path))
+    assert r.returncode == 0, r.stderr
+    assert json.loads(r.stdout)["history_store"] == "story-frontmatter"
+
+
+def test_explicit_sprint_status_overrides_project_root(tmp_path: Path):
+    """--sprint-status explicit path wins over --project-root auto-detection."""
+    # Config points to wrong location
+    wrong = tmp_path / "wrong/sprint-status.yaml"
+    wrong.parent.mkdir(parents=True)
+    wrong.write_text("development_status: {}\n", encoding="utf-8")
+    _bmad_config(tmp_path, output_folder=str(wrong.parent.parent))
+
+    # Explicit sprint-status at a different path
+    correct = tmp_path / "correct-sprint-status.yaml"
+    correct.write_text("development_status: {}\n", encoding="utf-8")
+
+    bcp_block = {"schema_version": "1.0", "rule_version": "1.0",
+                 "total": 2, "scored_at": "2026-01-01T00:00:00Z",
+                 "scored_by": "manual", "breakdown": {}}
+    story = _story(tmp_path, {"category": "backend", "estimated_hours": 10,
+                               "bcp": bcp_block})
+    bd = _bd(tmp_path, {"business_rules": [{"size": "M", "points": 3}]})
+
+    r = run("--story", str(story), "--breakdown", str(bd),
+            "--baseline", str(_baseline(tmp_path)), "--rule", str(_rule(tmp_path)),
+            "--scored-by", "rescore", "--rescore",
+            "--project-root", str(tmp_path),
+            "--sprint-status", str(correct))
+    assert r.returncode == 0, r.stderr
+
+    # History should be in the explicit file, not the auto-detected one
+    ss_correct = yaml.safe_load(correct.read_text())
+    ss_wrong = yaml.safe_load(wrong.read_text())
+    assert story.stem in ss_correct.get("bcp_metrics", {})
+    assert "bcp_metrics" not in ss_wrong
+
+
+def test_project_root_without_bmad_config_falls_back_to_legacy(tmp_path: Path):
+    """--project-root with no _bmad/config.yaml → legacy mode gracefully."""
+    story = _story(tmp_path, {"category": "backend", "estimated_hours": 10})
+    bd = _bd(tmp_path, {"business_rules": [{"size": "M", "points": 3}]})
+
+    r = run("--story", str(story), "--breakdown", str(bd),
+            "--baseline", str(_baseline(tmp_path)), "--rule", str(_rule(tmp_path)),
+            "--scored-by", "manual",
+            "--project-root", str(tmp_path))
+    assert r.returncode == 0, r.stderr
+    assert json.loads(r.stdout)["history_store"] == "story-frontmatter"

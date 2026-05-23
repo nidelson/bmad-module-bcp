@@ -19,7 +19,7 @@
       "name": "bmad-module-bcp",
       "source": "./",
       "description": "Pontua stories com o framework Business Complexity Points da CI&T e deriva estimated_hours a partir do score.",
-      "version": "0.1.1",
+      "version": "0.1.2",
       "author": {
         "name": "Nidelson Gimenez"
       },

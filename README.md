@@ -8,7 +8,7 @@
 
 > **Estimativa por complexidade, não por chute.**
 
-**Pontue cada story pelo framework Business Complexity Points da CI&T e deixe o `estimated_hours` cair do score — não do dedo.**
+Pontue cada story pelo framework Business Complexity Points (BCP) da CI&T. O `estimated_hours` sai do score × baseline da categoria — recalibrado com horas reais do seu time.
 
 🌐 [English 🇺🇸](README.en.md) · este é o manual canônico (PT-BR, default).
 

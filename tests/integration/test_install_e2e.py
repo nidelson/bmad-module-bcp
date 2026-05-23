@@ -12,11 +12,13 @@ locally: `BCP_E2E_INSTALL=1 uv run --group test pytest -m integration -k install
 from __future__ import annotations
 
 import os
+import re
 import shutil
 import subprocess
 from pathlib import Path
 
 import pytest
+import yaml
 
 from tests.conftest import REPO_ROOT
 
@@ -30,6 +32,21 @@ EXPECTED_SKILLS = {
     "bmad-bcp-score-batch", "bmad-bcp-rescore", "bmad-bcp-recalibrate",
     "bmad-bcp-backfill-baseline", "bmad-bcp-agent-bruno",
 }
+
+_ANSI_RE = re.compile(r"\x1b\[[0-9;]*[A-Za-z]")
+_BOX_TRANS = str.maketrans("", "", "╭╮╯╰─│┌┐└┘├┤┬┴┼━┃║═╔╗╚╝")
+
+
+def _flatten(s: str) -> str:
+    """ANSI-strip, drop box-drawing chars, collapse whitespace.
+
+    bmad-method renders the install summary inside a Rich panel; the
+    target strings get split across visual rows with ANSI styling and
+    border glyphs. Normalising to single-line whitespace lets the
+    semantic substring checks stay panel-layout-agnostic.
+    """
+    s = _ANSI_RE.sub("", s).translate(_BOX_TRANS)
+    return " ".join(s.split())
 
 
 @pytest.mark.skipif(not REQUIRED, reason=skip_reason)
@@ -49,10 +66,13 @@ def test_real_npx_install_is_clean_and_complete(tmp_path: Path):
         cwd=proj, capture_output=True, text=True, timeout=600,
     )
     assert proc.returncode == 0, proc.stderr or proc.stdout
-    out = proc.stdout
+    out = _flatten(proc.stdout)
 
-    # 1. Module reported installed at the pinned version.
-    assert "BCP — Business Complexity Points Scorer (v0.1.0, installed)" in out
+    # 1. Module reported installed at the version pinned in module.yaml.
+    #    Read it dynamically so release-please bumps don't require touching
+    #    this test — the contract is "what module.yaml says is what installs".
+    module_version = yaml.safe_load((REPO_ROOT / "module.yaml").read_text())["module_version"]
+    assert f"BCP — Business Complexity Points Scorer (v{module_version}, installed)" in out
 
     # 2. No canonical-schema conformance warning. This regressed once
     #    (module-help.csv used after/before instead of

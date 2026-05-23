@@ -18,8 +18,9 @@ já sai pontuado pelo BCP, sem passo manual.
 `/bmad-bcp-setup` chama `inject_customize.py --skill bmad-create-story`, que
 materializa o template
 [`assets/customize-templates/bmad-create-story.toml`](../../skills/bmad-bcp-setup/assets/customize-templates/bmad-create-story.toml)
-no `customize.toml` do consumidor. A única skill suportada por esse hook é
-`bmad-create-story` (`SUPPORTED_SKILLS = {"bmad-create-story"}`).
+no `customize.toml` do consumidor. Skills suportadas pelo inject:
+`bmad-create-story` (modo copy) e `bmad-code-review` (modo merge — ver
+[integração com bmad-code-review](./bmad-code-review.md)).
 
 O conteúdo entra em `[workflow].persistent_facts` com **semântica de append**
 — não sobrescreve fatos de outros módulos (ex.: PULSE). É aditivo e
@@ -54,3 +55,10 @@ PULSE também usa `persistent_facts` para o seu próprio hook. Por a semântica
 ser de append, os dois coexistem no mesmo `customize.toml` sem conflito: o
 agente recebe ambos os fatos e executa os dois (BCP pontua, PULSE registra).
 Ordem não importa — BCP age na criação da story, PULSE no track-done.
+
+O BCP tem um segundo ponto de integração com o PULSE: o hook de
+auto-recalibrate no `bmad-code-review`, que roda **após** o PULSE track-done
+gravar `actual_hours` e aciona `bmad-bcp-recalibrate` automaticamente. Esse
+hook usa modo merge no `bmad-code-review.toml` para coexistir com o
+on_complete do PULSE sem conflito. Ver
+[integração com bmad-code-review](./bmad-code-review.md).

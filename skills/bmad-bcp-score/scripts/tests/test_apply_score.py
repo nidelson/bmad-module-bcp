@@ -184,3 +184,81 @@ if __name__ == "__main__":
     sys.exit(subprocess.call(
         ["uv", "run", "--with", "pytest", "--with", "pyyaml",
          "pytest", "-q", str(Path(__file__).parent)]))
+
+
+# ── Sprint-status history store (issue #19) ──────────────────────────────────
+
+def test_sprint_status_flag_writes_history_there(tmp_path: Path):
+    """With --sprint-status: history goes to sprint-status, not story frontmatter."""
+    sprint = tmp_path / "sprint-status.yaml"
+    sprint.write_text("development_status: {}\n", encoding="utf-8")
+
+    story = _story(tmp_path, {"category": "backend", "estimated_hours": 10,
+                               "bcp": {"schema_version": "1.0", "rule_version": "1.0",
+                                       "total": 2, "scored_at": "2026-01-01T00:00:00Z",
+                                       "scored_by": "manual", "breakdown": {},
+                                       "history": []}})
+    bd = _bd(tmp_path, {"business_rules": [{"size": "M", "points": 3}]})
+    r = run("--story", str(story), "--breakdown", str(bd),
+            "--baseline", str(_baseline(tmp_path)), "--rule", str(_rule(tmp_path)),
+            "--scored-by", "rescore", "--rescore",
+            "--sprint-status", str(sprint))
+    assert r.returncode == 0
+    out = json.loads(r.stdout)
+    assert out["history_store"] == "sprint-status"
+
+    fm = yaml.safe_load(story.read_text().split("---", 2)[1])
+    assert "history" not in fm.get("bcp", {}), "history should not be in story frontmatter"
+
+    ss = yaml.safe_load(sprint.read_text())
+    story_key = story.stem
+    hist = ss["bcp_metrics"][story_key]["history"]
+    assert len(hist) == 1
+    assert hist[0]["total"] == 2
+
+
+def test_sprint_status_history_store_field(tmp_path: Path):
+    """Without --sprint-status: history_store is 'story-frontmatter'."""
+    story = _story(tmp_path, {"category": "backend", "estimated_hours": 10})
+    bd = _bd(tmp_path, {"business_rules": [{"size": "M", "points": 3}]})
+    r = run("--story", str(story), "--breakdown", str(bd),
+            "--baseline", str(_baseline(tmp_path)), "--rule", str(_rule(tmp_path)),
+            "--scored-by", "manual")
+    assert r.returncode == 0
+    assert json.loads(r.stdout)["history_store"] == "story-frontmatter"
+
+
+def test_sprint_status_idempotent_history(tmp_path: Path):
+    """Rescoring twice via sprint-status accumulates history without duplication."""
+    sprint = tmp_path / "sprint-status.yaml"
+    sprint.write_text("development_status: {}\n", encoding="utf-8")
+
+    bcp_block = {"schema_version": "1.0", "rule_version": "1.0",
+                 "total": 2, "scored_at": "2026-01-01T00:00:00Z",
+                 "scored_by": "manual", "breakdown": {}}
+    story = _story(tmp_path, {"category": "backend", "estimated_hours": 10,
+                               "bcp": bcp_block})
+    bd = _bd(tmp_path, {"business_rules": [{"size": "M", "points": 3}]})
+
+    base_args = ["--story", str(story), "--breakdown", str(bd),
+                 "--baseline", str(_baseline(tmp_path)), "--rule", str(_rule(tmp_path)),
+                 "--scored-by", "rescore", "--rescore",
+                 "--sprint-status", str(sprint)]
+
+    r1 = run(*base_args)
+    assert r1.returncode == 0
+
+    # Update story's bcp.total to simulate a new current score before second rescore
+    fm = yaml.safe_load(story.read_text().split("---", 2)[1])
+    fm["bcp"]["total"] = 3
+    fm["bcp"]["scored_at"] = "2026-02-01T00:00:00Z"
+    story.write_text(f"---\n{yaml.dump(fm)}---\n# body\n", encoding="utf-8")
+
+    r2 = run(*base_args)
+    assert r2.returncode == 0
+
+    ss = yaml.safe_load(sprint.read_text())
+    hist = ss["bcp_metrics"][story.stem]["history"]
+    assert len(hist) == 2
+    assert hist[0]["total"] == 2
+    assert hist[1]["total"] == 3

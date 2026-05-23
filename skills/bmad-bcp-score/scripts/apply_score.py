@@ -14,6 +14,11 @@ advisory, contract-invariant validation, and idempotent frontmatter write.
 It NEVER reads or writes `pulse_metrics` — all non-BCP frontmatter keys are
 preserved verbatim (PULSE owns those).
 
+Rescore history: when --sprint-status is provided, history is stored in
+bcp_metrics[story_key].history inside sprint-status.yaml (operational store).
+When omitted, history stays in bcp.history in the story frontmatter with a
+deprecation advisory (backward compat for projects without sprint-status).
+
 Exit codes: 0=success, 1=validation error, 2=runtime error, 3=conflict
 """
 from __future__ import annotations
@@ -97,6 +102,43 @@ def validate_breakdown(breakdown: dict, rule_slugs: set[str]) -> int:
     return total
 
 
+def write_history_to_sprint_status(
+    sprint_status_path: Path,
+    story_key: str,
+    history: list[dict],
+) -> None:
+    """Upsert bcp_metrics[story_key].history in sprint-status.yaml.
+
+    Creates the bcp_metrics section if absent. FIFO-caps at HISTORY_CAP.
+    Preserves all other sprint-status content verbatim.
+    """
+    text = sprint_status_path.read_text(encoding="utf-8")
+    data = yaml.safe_load(text) or {}
+    if not isinstance(data, dict):
+        raise ValueError("sprint-status.yaml root is not a mapping")
+
+    bcp_metrics = data.setdefault("bcp_metrics", {})
+    entry = bcp_metrics.setdefault(story_key, {})
+    entry["history"] = history[-HISTORY_CAP:]
+
+    sprint_status_path.write_text(
+        yaml.dump(data, default_flow_style=False, allow_unicode=True,
+                  sort_keys=False),
+        encoding="utf-8",
+    )
+
+
+def read_history_from_sprint_status(
+    sprint_status_path: Path,
+    story_key: str,
+) -> list[dict]:
+    """Read bcp_metrics[story_key].history from sprint-status.yaml."""
+    if not sprint_status_path.exists():
+        return []
+    data = yaml.safe_load(sprint_status_path.read_text(encoding="utf-8")) or {}
+    return list(data.get("bcp_metrics", {}).get(story_key, {}).get("history", []))
+
+
 def main() -> int:
     p = argparse.ArgumentParser(description=__doc__)
     p.add_argument("--story", type=Path, required=True)
@@ -110,9 +152,16 @@ def main() -> int:
                    help="override; defaults to story frontmatter `category`")
     p.add_argument("--rescore", action="store_true",
                    help="archive prior bcp block into history before writing")
+    p.add_argument("--sprint-status", type=Path, default=None,
+                   help="path to sprint-status.yaml; when provided, rescore "
+                        "history is stored there (bcp_metrics[story_key]) "
+                        "instead of story frontmatter (preferred)")
     p.add_argument("--now", default=None, help="ISO timestamp (testing)")
     p.add_argument("--dry-run", action="store_true")
     args = p.parse_args()
+
+    use_sprint_status = args.sprint_status is not None
+    story_key = args.story.stem
 
     try:
         rule = yaml.safe_load(args.rule.read_text(encoding="utf-8")) or {}
@@ -142,7 +191,17 @@ def main() -> int:
 
     prev = fm.get("bcp")
     advisories: list[str] = []
-    history = list(prev.get("history", [])) if isinstance(prev, dict) else []
+
+    # Load history from the appropriate store.
+    if use_sprint_status:
+        history = read_history_from_sprint_status(args.sprint_status, story_key)
+    else:
+        history = list(prev.get("history", [])) if isinstance(prev, dict) else []
+        if args.rescore:
+            advisories.append(
+                "bcp.history gravado no frontmatter da story (modo legado). "
+                "Passe --sprint-status para mover para sprint-status.yaml "
+                "(separação spec/operacional — issue #19).")
 
     if isinstance(prev, dict) and args.rescore:
         prev_total = prev.get("total")
@@ -182,15 +241,26 @@ def main() -> int:
 
     fm["estimated_hours"] = estimated_hours
     fm["estimated_hours_basis"] = "bcp"
-    fm["bcp"] = {
+
+    bcp_block: dict = {
         "schema_version": "1.0",
         "rule_version": rule_version,
         "total": total,
         "scored_at": scored_at,
         "scored_by": args.scored_by,
         "breakdown": breakdown,
-        "history": history,
     }
+    if not use_sprint_status:
+        # Legacy: keep history in story frontmatter when no sprint-status provided.
+        bcp_block["history"] = history
+    else:
+        # Modern: history lives in sprint-status; omit from story frontmatter.
+        # Migrate any legacy history block that may already be in frontmatter.
+        if isinstance(prev, dict) and prev.get("history"):
+            advisories.append(
+                "bcp.history migrado do frontmatter para sprint-status.yaml.")
+
+    fm["bcp"] = bcp_block
     # pulse_metrics and every other key are left untouched by construction.
 
     result = {
@@ -203,6 +273,7 @@ def main() -> int:
         "estimated_hours_pre_bcp": fm.get("estimated_hours_pre_bcp"),
         "scored_by": args.scored_by,
         "history_len": len(history),
+        "history_store": "sprint-status" if use_sprint_status else "story-frontmatter",
         "advisories": advisories,
         "dry_run": bool(args.dry_run),
     }
@@ -214,7 +285,9 @@ def main() -> int:
 
     try:
         args.story.write_text(render(fm, body, nl), encoding="utf-8")
-    except OSError as e:
+        if use_sprint_status and args.sprint_status.exists():
+            write_history_to_sprint_status(args.sprint_status, story_key, history)
+    except (OSError, ValueError, yaml.YAMLError) as e:
         print(json.dumps({"status": "error", "error": str(e)}, indent=2))
         return 2
 

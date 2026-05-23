@@ -55,7 +55,10 @@ properties:
         type: array
         maxItems: 50
         description: >-
-          Trilha de auditoria de rescores (FIFO, cap 50, warn no truncate).
+          DEPRECATED (issue #19): trilha de rescores movida para
+          sprint-status.yaml bcp_metrics[story_key].history quando
+          --sprint-status é passado ao apply_score.py. Este campo ainda
+          é escrito para backward compat quando --sprint-status é omitido.
           Mais antigo primeiro.
         items:
           type: object

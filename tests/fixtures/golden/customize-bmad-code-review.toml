@@ -1,0 +1,16 @@
+# BCP recalibrate hook — integração com bmad-code-review
+#
+# Gerado por `bmad-bcp-setup`. Editar por sua conta e risco: re-rodar
+# `/bmad-bcp-setup` sem `--force` não toca este arquivo (modo merge
+# é idempotente — re-aplicar o mesmo hook é seguro).
+#
+# A instrução abaixo é ACRESCENTADA ao on_complete existente do
+# bmad-code-review (modo --merge). Se outro módulo (ex.: PULSE) já
+# registrou um on_complete, ambas as instruções coexistem em sequência.
+#
+# Identificadores de skill/campo permanecem em EN; a narrativa
+# operacional é PT-BR (ADR 0001).
+
+[workflow]
+
+on_complete = "BCP auto-recalibrate (execute SOMENTE APÓS todas as instruções anteriores deste on_complete terem sido concluídas, incluindo qualquer skill interativa como bmad-pulse-track-done e a gravação de actual_hours no sprint-status): verifique se a story tem bcp.total no frontmatter. Se sim, leia o campo actual_hours da seção pulse_metrics do sprint-status (keyed pelo story_key ou story_id da story) — este campo só existe se bmad-pulse-track-done já completou sua execução. Se actual_hours estiver presente e for um número válido, invoque a skill bmad-bcp-recalibrate passando o caminho da story como argumento e --actual-hours com o valor lido (ex.: /bmad-bcp-recalibrate --story _bmad-output/implementation-artifacts/16-1-mcp-tooling.md --actual-hours 0.48). A recalibração é idempotente — amostras já aplicadas são puladas pelo id da story. Se bcp.total estiver ausente, actual_hours não for encontrado ou bmad-pulse-track-done não tiver rodado ainda, pule silenciosamente sem erro e sem tentar recalibrar."

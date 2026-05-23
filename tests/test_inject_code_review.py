@@ -19,7 +19,7 @@ GOLDEN_STANDALONE = REPO_ROOT / "tests/fixtures/golden/customize-bmad-code-revie
 GOLDEN_MERGED = REPO_ROOT / "tests/fixtures/golden/customize-bmad-code-review-merged.toml"
 INJECT = SKILLS / "bmad-bcp-setup/scripts/inject_customize.py"
 
-BCP_SENTENCE = "BCP auto-recalibrate: após o code review encerrar"
+BCP_SENTENCE = "BCP auto-recalibrate (execute SOMENTE APÓS"
 
 # Simulates what PULSE writes to _bmad/custom/bmad-code-review.toml
 PULSE_FILE_CONTENT = '''\
@@ -75,7 +75,7 @@ def test_inject_merge_appends_to_existing_on_complete(tmp_path):
     merged_text = dest.read_text(encoding="utf-8")
     assert "PULSE auto-tracking" in merged_text, "PULSE sentence lost after merge"
     assert BCP_SENTENCE in merged_text, "BCP sentence missing after merge"
-    assert merged_text.count("on_complete") == 1, "should have single on_complete key"
+    assert merged_text.count("on_complete =") == 1, "should have single on_complete key"
 
 
 def test_inject_merge_matches_golden(tmp_path):

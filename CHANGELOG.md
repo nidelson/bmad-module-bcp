@@ -1,5 +1,18 @@
 # Changelog
 
+## [0.1.2](https://github.com/nidelson/bmad-module-bcp/compare/v0.1.1...v0.1.2) (2026-05-23)
+
+
+### Funcionalidades
+
+* **score:** auto-detectar sprint-status via --project-root ([#25](https://github.com/nidelson/bmad-module-bcp/issues/25)) ([#26](https://github.com/nidelson/bmad-module-bcp/issues/26)) ([66c283c](https://github.com/nidelson/bmad-module-bcp/commit/66c283c43ce400461ce9d3e1007599aa0be6900a))
+
+
+### Documentação
+
+* **integration:** atualiza pulse.md para separação spec/operacional ([#27](https://github.com/nidelson/bmad-module-bcp/issues/27)) ([2a8ef3c](https://github.com/nidelson/bmad-module-bcp/commit/2a8ef3c6cd54fb6ca8510a7252cb8447586b349d))
+* **readme:** reescrever sub-tagline com mecânica clara ([#23](https://github.com/nidelson/bmad-module-bcp/issues/23)) ([c51c75f](https://github.com/nidelson/bmad-module-bcp/commit/c51c75fc4ef80fad0b683da659af7e31fac830de))
+
 ## [0.1.1](https://github.com/nidelson/bmad-module-bcp/compare/v0.1.0...v0.1.1) (2026-05-23)
 
 

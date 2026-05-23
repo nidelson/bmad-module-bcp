@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.1.1](https://github.com/nidelson/bmad-module-bcp/compare/v0.1.0...v0.1.1) (2026-05-23)
+
+
+### Funcionalidades
+
+* **score:** mover bcp.history para sprint-status via --sprint-status ([#19](https://github.com/nidelson/bmad-module-bcp/issues/19)) ([#22](https://github.com/nidelson/bmad-module-bcp/issues/22)) ([12ad972](https://github.com/nidelson/bmad-module-bcp/commit/12ad97265046847f16f1db4b5da0627cab22def6))
+* **setup:** auto-trigger recalibrate via bmad-code-review on_complete ([#20](https://github.com/nidelson/bmad-module-bcp/issues/20)) ([1bd366f](https://github.com/nidelson/bmad-module-bcp/commit/1bd366fee2ca866fd9105d779ed5dbdd39d088e2))
+
 ## 0.1.0 (2026-05-19)
 
 

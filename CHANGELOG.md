@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.1.3](https://github.com/nidelson/bmad-module-bcp/compare/v0.1.2...v0.1.3) (2026-05-31)
+
+
+### Funcionalidades
+
+* **skills:** adiciona hook on_complete em todas workflow skills ([#30](https://github.com/nidelson/bmad-module-bcp/issues/30)) ([fc9dc1e](https://github.com/nidelson/bmad-module-bcp/commit/fc9dc1e233f02b138c4b84fa53c6838af97b584a))
+
 ## [0.1.2](https://github.com/nidelson/bmad-module-bcp/compare/v0.1.1...v0.1.2) (2026-05-23)
 
 

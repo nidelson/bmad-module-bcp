@@ -96,6 +96,29 @@ Setup grava as respostas via o sistema de config em quatro camadas do BMAD. Prin
 
 Para mudar de forma durável: re-rodar o installer ou usar as camadas `_bmad/custom/`. **Nunca** editar `_bmad/config.toml` direto (installer-owned, regenerado a cada install).
 
+## Estendendo as skills — hook `on_complete`
+
+Toda skill BCP (exceto a persona Bruno) expõe um `on_complete` opt-in que roda **após** a persistência do artefato primário — `bcp-baseline.yaml`, frontmatter `bcp.*`, o que for. Default é vazio (zero comportamento); override em `_bmad/custom/<skill>.toml` (team, committed) ou `*.user.toml` (pessoal, gitignored).
+
+**Exemplo — encadear recalibração com regen do dashboard PULSE:**
+
+```toml
+# _bmad/custom/bmad-bcp-recalibrate.toml
+[workflow]
+on_complete = "invoque a skill /bmad-pulse-dashboard (sem argumentos) para regenerar o dashboard cumulativo refletindo o novo h_per_bcp."
+```
+
+Quando `bmad-bcp-recalibrate` termina de gravar o baseline, o LLM lê esse texto como instrução terminal e invoca `/bmad-pulse-dashboard`. Idempotente, opt-in, e sem acoplamento — BCP não importa PULSE; o `customize.toml` do projeto consumidor é que decide chain.
+
+**Invariantes do hook** (qualquer override precisa respeitar):
+
+- Roda **após** persistência — o artefato já está no disco.
+- **NÃO pode mutar** o artefato primário da skill (single-writer principle).
+- Erro no hook é **warn**, não rollback — o trabalho já foi gravado.
+- `--dry-run` (sem persistência) **pula** o hook.
+
+Mesmas três camadas de override que o resto da config (skill defaults < team < user). Resolver: `python3 _bmad/scripts/resolve_customization.py --skill <skill-path> --key workflow.on_complete`.
+
 ## Integração com o PULSE
 
 BCP e PULSE são frouxamente acoplados, **mediados por schema** — nenhum importa o outro. BCP escreve o bloco `bcp.*` e o `estimated_hours`; PULSE lê `estimated_hours` de forma agnóstica ao escritor e mede eficiência de IA. Nenhum ajuste no PULSE é necessário.

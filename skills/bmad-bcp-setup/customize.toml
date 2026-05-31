@@ -1,0 +1,52 @@
+# DO NOT EDIT -- overwritten on every update.
+#
+# Workflow customization surface for bmad-bcp-setup. Mirrors the
+# BMad workflow customization shape under the [workflow] namespace.
+
+[workflow]
+
+# --- Configurável abaixo. Overrides mesclam pelas regras estruturais BMad: ---
+#   escalares: override vence • arrays (persistent_facts, activation_steps_*): append
+#   arrays-de-tabela com `code`/`id`: substituem itens iguais, anexam novos.
+
+# Steps to run before the standard activation (capability gate, module.yaml load).
+# Overrides append. Use for org-specific pre-install validations.
+
+activation_steps_prepend = []
+
+# Steps to run after activation but before the config collection prompts.
+# Overrides append. Use for context-heavy setup such as pre-loading
+# defaults from an org configuration management system.
+
+activation_steps_append = []
+
+# Persistent facts the workflow keeps in mind for the whole run
+# (org-wide install conventions, default value tweaks).
+# Overrides append.
+#
+# Each entry is either:
+#   - a literal sentence, e.g. "Sempre instale com bcp_overwrite_estimated_hours=yes neste squad."
+#   - a file reference prefixed with `file:`, e.g. "file:{project-root}/docs/bcp-install-policy.md"
+#     (glob patterns are supported; the file's contents are loaded and treated as facts).
+
+persistent_facts = []
+
+# Scalar: executed AFTER the setup workflow has fully completed (config
+# written, baseline seeded, agent registered, customize hooks injected,
+# legacy directories cleaned) — and NEVER before. Default empty = no-op.
+# Override wins.
+#
+# Invariants:
+# - Hook runs AFTER the Outcome step — all install artifacts are on disk.
+# - Hook MUST NOT mutate any install artifact (single-writer principle —
+#   the setup scripts own those files for the duration of the install).
+# - Error in hook is warn, not rollback — install already committed.
+# - In a failed install (script exit non-zero before Outcome) the hook
+#   is SKIPPED.
+#
+# Override in `{project-root}/_bmad/custom/bmad-bcp-setup.toml`:
+#
+#   [workflow]
+#   on_complete = "post a one-line announcement to the team Slack channel: BCP module installed in this repository, version <module_version>. Coach Bruno is available via /bmad-bcp-agent-bruno."
+
+on_complete = ""

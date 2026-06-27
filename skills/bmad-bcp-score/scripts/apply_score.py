@@ -190,6 +190,10 @@ def main() -> int:
                    choices=["bruno", "manual", "rescore", "retroactive"])
     p.add_argument("--category", default=None,
                    help="override; defaults to story frontmatter `category`")
+    p.add_argument("--reference-h-per-bcp", type=float, default=None,
+                   help="frozen reference rate (governance anchor) used to derive "
+                        "estimated_hours_reference. Defaults to the baseline seed "
+                        "when omitted. NEVER the live recalibrated factor.")
     p.add_argument("--rescore", action="store_true",
                    help="archive prior bcp block into history before writing")
     p.add_argument("--project-root", type=Path, default=None,
@@ -235,6 +239,19 @@ def main() -> int:
     category = args.category or fm.get("category")
     hpb, hpb_source = h_per_bcp(baseline, category)
     estimated_hours = round(total * hpb, 2)
+
+    # Frozen reference anchor (issue #32): a stable denominator for leverage that
+    # does NOT collapse as the category calibrates. Defaults to the cold-start
+    # seed so the anchor is computable from day one; a governance-set reference
+    # rate (via --reference-h-per-bcp) overrides it. NEVER the recalibrated factor.
+    snap = baseline.get("config_snapshot", {}) or {}
+    seed = float(snap.get("seed", 4.13))
+    if args.reference_h_per_bcp is not None:
+        reference_rate, reference_source = float(args.reference_h_per_bcp), "config"
+    else:
+        reference_rate, reference_source = seed, "seed"
+    estimated_hours_reference = round(total * reference_rate, 2)
+
     scored_at = args.now or datetime.now(timezone.utc).strftime(
         "%Y-%m-%dT%H:%M:%SZ")
 
@@ -290,6 +307,7 @@ def main() -> int:
 
     fm["estimated_hours"] = estimated_hours
     fm["estimated_hours_basis"] = "bcp"
+    fm["estimated_hours_reference"] = estimated_hours_reference
 
     bcp_block: dict = {
         "schema_version": "1.0",
@@ -320,6 +338,9 @@ def main() -> int:
         "hours_per_bcp_source": hpb_source,
         "estimated_hours": estimated_hours,
         "estimated_hours_pre_bcp": fm.get("estimated_hours_pre_bcp"),
+        "reference_h_per_bcp": reference_rate,
+        "reference_source": reference_source,
+        "estimated_hours_reference": estimated_hours_reference,
         "scored_by": args.scored_by,
         "history_len": len(history),
         "history_store": "sprint-status" if use_sprint_status else "story-frontmatter",

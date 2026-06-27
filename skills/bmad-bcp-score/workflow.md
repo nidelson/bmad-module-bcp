@@ -25,7 +25,7 @@ Divisão de responsabilidade: o **LLM faz o julgamento** (escolher tamanho por e
 4. **Story alvo:** caminho passado como argumento, ou a story in-progress do contexto.
 5. **Régua:** `{project-root}/.claude/skills/bmad-bcp-rule-card/assets/bcp-rule.yaml` (fonte única imutável; não duplicar — ND). Se ausente: pare e informe que o módulo BCP não está instalado (`/bmad-bcp-setup`).
 6. **Baseline:** `{project-root}/_bmad-output/implementation-artifacts/bcp-baseline.yaml` (ou `bcp.bcp_baseline_path` da config). Se ausente: pare e oriente rodar `/bmad-bcp-setup` (semeia o baseline).
-7. **Config:** leia a seção `bcp` de `{project-root}/_bmad/config.yaml`: `bcp_confidence_threshold` (default 0.75), `bcp_non_interactive_default` (default yes), `bcp_overwrite_estimated_hours` (consentimento — se `no`, não sobrescreva `estimated_hours`: apenas anexe o bloco `bcp.*` e informe). Sem config → defaults + siga (módulo pode não ter rodado setup).
+7. **Config:** leia a seção `bcp` de `{project-root}/_bmad/config.yaml`: `bcp_confidence_threshold` (default 0.75), `bcp_non_interactive_default` (default yes), `bcp_overwrite_estimated_hours` (consentimento — se `no`, não sobrescreva `estimated_hours`: apenas anexe o bloco `bcp.*` e informe), `bcp_reference_h_per_bcp` (reference rate frozen para a âncora de alavancagem — se ausente, o script usa o seed; **nunca** o fator recalibrado). Sem config → defaults + siga (módulo pode não ter rodado setup).
 8. **Append steps:** execute cada entrada de `workflow.activation_steps_append` em ordem.
 
 ## Auto-Score
@@ -45,8 +45,10 @@ Caso contrário: **non-interactive** — aplique direto.
 Sempre rode primeiro em modo preview para validar invariantes:
 
 ```bash
-python3 scripts/apply_score.py --story "{story-path}" --breakdown {tmp-breakdown.json} --baseline "{baseline-path}" --rule "{rule-path}" --scored-by {scored_by} [--rescore] --dry-run
+python3 scripts/apply_score.py --story "{story-path}" --breakdown {tmp-breakdown.json} --baseline "{baseline-path}" --rule "{rule-path}" --scored-by {scored_by} [--reference-h-per-bcp {bcp_reference_h_per_bcp}] [--rescore] --dry-run
 ```
+
+Passe `--reference-h-per-bcp` **apenas** quando `bcp_reference_h_per_bcp` estiver configurado (passo 7); omita-o quando ausente — o script cai no seed automaticamente. Nunca derive esse valor do baseline recalibrado.
 
 - **Non-interactive:** se o dry-run sai 0, rode de novo **sem** `--dry-run` para gravar.
 - **Dry-run review:** apresente ao usuário o preview (total, `estimated_hours`, fonte do `h_per_bcp`, `estimated_hours_pre_bcp`, breakdown, advisories). Só grave (rerun sem `--dry-run`) após confirmação explícita. Em rescore, passe `--rescore` (arquiva o bloco anterior em `bcp.history`, FIFO cap 50).
@@ -59,7 +61,7 @@ Se `result.advisories` não vazio (delta >50% num rescore, drift cumulativo >2×
 
 ## Confirm
 
-Resuma: total BCP, `estimated_hours` derivado (e `estimated_hours_pre_bcp` preservado), fonte do `h_per_bcp` (`seed` vs `baseline:<categoria>`), `scored_by`, tamanho de `bcp.history`. Confirme que `pulse_metrics` e demais chaves ficaram intactas.
+Resuma: total BCP, `estimated_hours` derivado (e `estimated_hours_pre_bcp` preservado), fonte do `h_per_bcp` (`seed` vs `baseline:<categoria>`), `estimated_hours_reference` derivado + `reference_source` (`seed` vs `config`), `scored_by`, tamanho de `bcp.history`. Confirme que `pulse_metrics` e demais chaves ficaram intactas.
 
 ## On Completion
 
@@ -83,4 +85,5 @@ Customizar override (team-level, committed): edite `{project-root}/_bmad/custom/
 - O script preserva o corpo da story verbatim; só re-serializa o mapa de frontmatter (chaves não-BCP mantidas, ordem preservada).
 - Idempotência: re-rodar o mesmo breakdown sem `--rescore` não re-sobrescreve `estimated_hours_pre_bcp` nem polui `history`.
 - `bcp-frontmatter.schema.yaml` (em `assets/`) documenta o contrato; o script valida os invariantes em código (sem dependência extra de jsonschema).
+- **Três números h/BCP (issue #32):** *seed* (cold-start) e *recalibrado* (fator vivo por categoria) derivam o **plano** (`estimated_hours`) → previsibilidade. A *reference rate* frozen (`bcp_reference_h_per_bcp`) deriva a **âncora** (`estimated_hours_reference`) → alavancagem estável que não colapsa. O script é dono de toda conversão BCP→horas (single-writer); o PULSE só **lê** os campos. A reference rate muda só por **governança** (config durável + ledger, forward-only) — `recalibrate` nunca a toca. Procedimento completo no README.
 - **Customization surface:** `customize.toml` segue o padrão BMad — três camadas (skill defaults < team `<project>/_bmad/custom/*.toml` < user `*.user.toml`) resolvidas por `_bmad/scripts/resolve_customization.py`. `on_complete` é o extension point para encadear ações pós-persistência sem fork da skill.

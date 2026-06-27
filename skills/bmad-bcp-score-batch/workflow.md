@@ -48,10 +48,11 @@ Para cada story com `selected: true` no plano:
    ```bash
    python3 "{project-root}/.claude/skills/bmad-bcp-score/scripts/apply_score.py" \
      --story "{story-abs-path}" --breakdown {tmp-breakdown.json} \
-     --baseline "{baseline-path}" --rule "{rule-path}" --scored-by retroactive
+     --baseline "{baseline-path}" --rule "{rule-path}" --scored-by retroactive \
+     [--reference-h-per-bcp {bcp_reference_h_per_bcp}]
    ```
 
-   `scored_by` é **sempre `retroactive`** neste fluxo (distingue de `manual`/`bruno`/`rescore`). Não use `--rescore` aqui salvo se o usuário pediu repontuar explicitamente (aí passe `--rescore` e o plano com `--rescore`).
+   `scored_by` é **sempre `retroactive`** neste fluxo (distingue de `manual`/`bruno`/`rescore`). Não use `--rescore` aqui salvo se o usuário pediu repontuar explicitamente (aí passe `--rescore` e o plano com `--rescore`). Inclua `--reference-h-per-bcp` **somente** se `bcp_reference_h_per_bcp` estiver na config `bcp`; o mesmo valor para todo o lote mantém a âncora `estimated_hours_reference` comparável entre as stories.
 3. Exit não-zero numa story: registre a falha, **não aborte o lote** — continue as demais e reporte no fim.
 
 Em lote grande, processe incrementalmente e vá reportando progresso (N/total) para sobreviver a compactação de contexto.

@@ -82,6 +82,37 @@ Depois, dentro do projeto:
 
 O baseline vive em `{output_folder}/implementation-artifacts/bcp-baseline.yaml`. Squad com histórico? `/bmad-bcp-backfill-baseline <glob>` pontua o passado e calibra sem esperar o acúmulo natural.
 
+### Os três números h/BCP
+
+Existem **três** fatores `h_per_bcp` com papéis distintos — não confunda:
+
+| Número | Ex. | Muda como | Deriva | Serve a |
+| --- | --- | --- | --- | --- |
+| **Seed** | `4.13` | uma vez, no setup | cold-start interno | bootstrap |
+| **Recalibrado** (vivo) | `~0.5` | contínuo, automático (`recalibrate`) | `estimated_hours` — o **plano** | **previsibilidade** |
+| **Referência** (frozen) | `5.0` | raro, por **governança** | `estimated_hours_reference` — a **âncora** | **alavancagem estável** |
+
+`estimated_hours = total × recalibrado` segue a realidade do time — ótimo para planejar, mas faz a alavancagem (`estimated_hours / actual_hours`) colapsar para ~1× conforme a categoria calibra. `estimated_hours_reference = total × referência` usa um denominador **frozen** que não colapsa — é o número de ROI estável que a liderança pede. O BCP é dono de **toda** conversão BCP→horas (single-writer); o PULSE só **lê** os dois campos e divide. Sem `bcp_reference_h_per_bcp` configurado, a âncora cai no seed (computável desde o dia 1).
+
+> **Guardrail:** mudar a referência **nunca** toca o fator recalibrado. Ninguém "compra" previsibilidade de entrega mexendo no número de marketing.
+
+### Governança da reference rate
+
+A reference rate é um knob deliberado (benchmark de marketing/indústria), não o seed. Mudá-la (ex.: `5h → 4h`) escala **toda** a alavancagem (×0.8) — vetor de Goodhart. Por isso é **governada e versionada**, nunca edit silencioso:
+
+1. **Editar a config durável** — `bcp_reference_h_per_bcp` na camada `_bmad/custom/` (nunca `_bmad/config.toml`, installer-owned).
+2. **Carimbar o ledger** — anexe uma entrada a `{output_folder}/implementation-artifacts/bcp-reference-ledger.yaml`:
+   ```yaml
+   - value: 4.0
+     effective_from: "2026-07-01"
+     previous: 5.0
+     source: "Decisão C-Level Q3 — rebench vs mercado 2026"
+   ```
+3. **Forward-only (recomendado):** stories novas pontuam com o valor novo; stories velhas mantêm o `estimated_hours_reference` já frozen no frontmatter delas. Zero rewrite, auditável; o dashboard do PULSE rotula a quebra de regime.
+4. **Retroativo (opcional):** `/bmad-bcp-rescore` recomputa a âncora de todas com a nova taxa — comparável ponta a ponta, mas apaga a base histórica.
+
+`recalibrate` **não** participa: ele amadurece só o fator vivo. Seed e referência são imutáveis por ele.
+
 ## Configuração
 
 Setup grava as respostas via o sistema de config em quatro camadas do BMAD. Principais variáveis:
@@ -92,6 +123,7 @@ Setup grava as respostas via o sistema de config em quatro camadas do BMAD. Prin
 | `bcp_non_interactive_default` | `yes` | Auto-score direto; dry-run só em divergência |
 | `bcp_confidence_threshold` | `0.75` | Acima disso, pula o dry-run review |
 | `bcp_estimation_basis` | `bcp` | Rótulo gravado em `estimated_hours_basis` |
+| `bcp_reference_h_per_bcp` | _(seed)_ | Reference rate frozen da âncora de alavancagem; muda só por governança (ledger) |
 | `bcp_data_folder` | `{output_folder}/implementation-artifacts` | Onde baseline e artefatos ficam |
 
 Para mudar de forma durável: re-rodar o installer ou usar as camadas `_bmad/custom/`. **Nunca** editar `_bmad/config.toml` direto (installer-owned, regenerado a cada install).
@@ -123,8 +155,9 @@ Mesmas três camadas de override que o resto da config (skill defaults < team < 
 
 BCP e PULSE são frouxamente acoplados, **mediados por schema** — nenhum importa o outro. BCP escreve o bloco `bcp.*` e o `estimated_hours`; PULSE lê `estimated_hours` de forma agnóstica ao escritor e mede eficiência de IA. Nenhum ajuste no PULSE é necessário.
 
-- BCP **escreve:** `estimated_hours`, `estimated_hours_pre_bcp`, `estimated_hours_basis`, `bcp.*`, `bcp.history`.
+- BCP **escreve:** `estimated_hours`, `estimated_hours_pre_bcp`, `estimated_hours_basis`, `estimated_hours_reference`, `bcp.*`, `bcp.history`.
 - BCP **nunca escreve:** `pulse_metrics`.
+- PULSE **lê** `estimated_hours` (plano → previsibilidade) e `estimated_hours_reference` (âncora frozen → alavancagem estável). Sem o campo de referência, cai na alavancagem-vs-plano.
 - Se o PULSE estiver ausente, o BCP funciona sozinho. Se o BCP estiver ausente, o PULSE usa a estimativa da Amelia.
 
 Contrato completo: [docs/integration/pulse.md](docs/integration/pulse.md). Hook no fluxo de criação de story: [docs/integration/bmad-create-story.md](docs/integration/bmad-create-story.md).

@@ -26,9 +26,10 @@ integração funcionar.
 
 | Chave | BCP | PULSE |
 | --- | --- | --- |
-| `estimated_hours` | **escreve** (sobrescreve, consentimento via install) | lê |
+| `estimated_hours` | **escreve** (sobrescreve, consentimento via install) | lê (plano → previsibilidade) |
 | `estimated_hours_pre_bcp` | **escreve uma única vez** (auditoria) | — |
 | `estimated_hours_basis` | **escreve** (`bcp`) | lê (opcional) |
+| `estimated_hours_reference` | **escreve** (âncora frozen, issue #32) | lê (âncora → alavancagem estável) |
 | `bcp.total`, `bcp.breakdown`, `bcp.scored_by` | **escreve** | lê (opcional) |
 | `pulse_metrics` | **nunca toca** | escreve |
 
@@ -67,6 +68,7 @@ Exemplo do que o BCP grava numa story:
 estimated_hours: 33
 estimated_hours_pre_bcp: 10
 estimated_hours_basis: bcp
+estimated_hours_reference: 40        # âncora frozen = total × reference rate (issue #32)
 bcp:
   schema_version: "1.0"
   rule_version: "ciandt-2014"
@@ -88,6 +90,21 @@ bcp:
 `bcp-baseline.yaml` (seed 4.13 no cold start). `estimated_hours_pre_bcp`
 guarda o valor original **só na primeira vez** que o BCP sobrescreve — é
 trilha de auditoria, não é reescrito em rescores.
+
+### Dois denominadores: plano vs âncora (issue #32)
+
+O BCP grava **dois** números de horas, com papéis ortogonais:
+
+| Campo | Fórmula | Denominador | PULSE usa para |
+| --- | --- | --- | --- |
+| `estimated_hours` | `total × h_per_bcp` (recalibrado/vivo) | segue a realidade do time | **previsibilidade** (drift `actual` vs plano) |
+| `estimated_hours_reference` | `total × reference_h_per_bcp` (frozen) | benchmark fixo, governado | **alavancagem estável** (`reference / actual`, não colapsa) |
+
+PULSE só **lê** os dois — não importa o BCP, não lê o baseline, não converte
+BCP→horas. **Degradação graciosa:** sem `estimated_hours_reference` (BCP antigo
+ou ausente), o PULSE cai na alavancagem-vs-plano de hoje. A reference rate muda
+só por governança (ledger forward-only); a recalibração nunca a toca — ver
+[README → Governança da reference rate](../../README.md).
 
 ## Contrato no sprint-status
 

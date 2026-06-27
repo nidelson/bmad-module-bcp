@@ -186,6 +186,87 @@ if __name__ == "__main__":
          "pytest", "-q", str(Path(__file__).parent)]))
 
 
+# ── Reference rate / estimated_hours_reference (issue #32) ───────────────────
+
+def test_reference_defaults_to_seed(tmp_path: Path):
+    """Sem --reference-h-per-bcp: a âncora usa o seed do baseline."""
+    story = _story(tmp_path, {"category": "backend", "estimated_hours": 80})
+    bd = _bd(tmp_path, {"business_rules": [{"size": "XL", "points": 8}]})
+    r = run("--story", str(story), "--breakdown", str(bd),
+            "--baseline", str(_baseline(tmp_path)), "--rule", str(_rule(tmp_path)),
+            "--scored-by", "manual")
+    assert r.returncode == 0, r.stdout + r.stderr
+    out = json.loads(r.stdout)
+    assert out["reference_h_per_bcp"] == 4.13
+    assert out["reference_source"] == "seed"
+    assert out["estimated_hours_reference"] == round(8 * 4.13, 2)
+    fm, _, _ = _split(story.read_text())
+    assert fm["estimated_hours_reference"] == round(8 * 4.13, 2)
+
+
+def test_reference_explicit_rate_distinct_from_plan(tmp_path: Path):
+    """--reference-h-per-bcp fixa a âncora; o plano segue o fator (seed) — números distintos."""
+    story = _story(tmp_path, {"category": "backend", "estimated_hours": 10})
+    bd = _bd(tmp_path, {"business_rules": [{"size": "M", "points": 3}]})
+    r = run("--story", str(story), "--breakdown", str(bd),
+            "--baseline", str(_baseline(tmp_path)), "--rule", str(_rule(tmp_path)),
+            "--scored-by", "manual", "--reference-h-per-bcp", "5.0")
+    out = json.loads(r.stdout)
+    assert out["reference_h_per_bcp"] == 5.0
+    assert out["reference_source"] == "config"
+    assert out["estimated_hours_reference"] == 15.0      # 3 × 5.0 (âncora frozen)
+    assert out["estimated_hours"] == round(3 * 4.13, 2)  # plano via seed
+
+
+def test_reference_frozen_while_plan_recalibrates(tmp_path: Path):
+    """Categoria calibrada: plano usa o fator vivo; âncora fica na reference rate."""
+    story = _story(tmp_path, {"category": "backend", "estimated_hours": 10})
+    bd = _bd(tmp_path, {"business_rules": [{"size": "M", "points": 3}]})
+    base = _baseline(tmp_path, {"backend": {"h_per_bcp": 0.5, "is_seed": False}})
+    r = run("--story", str(story), "--breakdown", str(bd), "--baseline",
+            str(base), "--rule", str(_rule(tmp_path)), "--scored-by", "manual",
+            "--reference-h-per-bcp", "5.0")
+    out = json.loads(r.stdout)
+    assert out["hours_per_bcp"] == 0.5                   # plano: fator recalibrado
+    assert out["estimated_hours"] == 1.5                 # 3 × 0.5
+    assert out["reference_h_per_bcp"] == 5.0             # âncora: reference rate
+    assert out["estimated_hours_reference"] == 15.0      # 3 × 5.0 (não colapsa)
+
+
+def test_reference_recomputes_on_rescore(tmp_path: Path):
+    """Rescore muda o total → a âncora reflete o novo total × mesma reference rate."""
+    story = _story(tmp_path, {"category": "backend", "estimated_hours": 8})
+    rule, base = _rule(tmp_path), _baseline(tmp_path)
+    run("--story", str(story), "--breakdown",
+        str(_bd(tmp_path, {"business_rules": [{"size": "S", "points": 2}]})),
+        "--baseline", str(base), "--rule", str(rule), "--scored-by", "manual",
+        "--reference-h-per-bcp", "5.0")
+    fm1, _, _ = _split(story.read_text())
+    assert fm1["estimated_hours_reference"] == 10.0      # 2 × 5.0
+    bd2 = tmp_path / "bd2.json"
+    bd2.write_text(json.dumps({"breakdown":
+        {"business_rules": [{"size": "XL", "points": 8}]}}))
+    run("--story", str(story), "--breakdown", str(bd2), "--baseline", str(base),
+        "--rule", str(rule), "--scored-by", "rescore", "--rescore",
+        "--reference-h-per-bcp", "5.0")
+    fm2, _, _ = _split(story.read_text())
+    assert fm2["estimated_hours_reference"] == 40.0      # 8 × 5.0
+
+
+def test_reference_dry_run_not_written(tmp_path: Path):
+    """--dry-run mostra a âncora no preview mas não grava o arquivo."""
+    story = _story(tmp_path, {"category": "backend", "estimated_hours": 50})
+    before = story.read_text()
+    bd = _bd(tmp_path, {"business_rules": [{"size": "M", "points": 3}]})
+    r = run("--story", str(story), "--breakdown", str(bd), "--baseline",
+            str(_baseline(tmp_path)), "--rule", str(_rule(tmp_path)),
+            "--scored-by", "manual", "--reference-h-per-bcp", "5.0", "--dry-run")
+    out = json.loads(r.stdout)
+    assert out["estimated_hours_reference"] == 15.0
+    assert out["preview_frontmatter"]["estimated_hours_reference"] == 15.0
+    assert story.read_text() == before
+
+
 # ── Sprint-status history store (issue #19) ──────────────────────────────────
 
 def test_sprint_status_flag_writes_history_there(tmp_path: Path):

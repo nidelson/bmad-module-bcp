@@ -37,10 +37,12 @@ Skill **fina e sem scripts**: o determinístico (arquivar history, cap 50 + warn
    python3 "{project-root}/.claude/skills/bmad-bcp-score/scripts/apply_score.py" \
      --story "{story-abs-path}" --breakdown {tmp-breakdown.json} \
      --baseline "{baseline-path}" --rule "{rule-path}" \
-     --scored-by rescore --rescore --dry-run
+     --scored-by rescore --rescore [--reference-h-per-bcp {bcp_reference_h_per_bcp}] --dry-run
    ```
 
-4. Apresente o preview em PT-BR: total antigo → novo, `estimated_hours` antigo → novo, fonte do `h_per_bcp`, tamanho de `bcp.history` após arquivar, e **todas as `advisories`** (delta >50%, drift cumulativo >2×, truncate de history → "considere split em sub-story").
+   Inclua `--reference-h-per-bcp` **somente** se `bcp_reference_h_per_bcp` estiver na config `bcp` (`_bmad/config.yaml`); omita quando ausente (cai no seed). Passar o mesmo valor no rescore mantém a âncora `estimated_hours_reference` consistente — **nunca** derive-o do baseline recalibrado.
+
+4. Apresente o preview em PT-BR: total antigo → novo, `estimated_hours` antigo → novo, fonte do `h_per_bcp`, `estimated_hours_reference` antigo → novo (âncora frozen), tamanho de `bcp.history` após arquivar, e **todas as `advisories`** (delta >50%, drift cumulativo >2×, truncate de history → "considere split em sub-story").
 5. Só após **confirmação explícita**, repita **sem** `--dry-run` para gravar.
 6. Exit não-zero: mostre o erro verbatim e pare.
 

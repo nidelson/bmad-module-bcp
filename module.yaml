@@ -69,6 +69,14 @@ bcp_baseline_rolling_window:
   prompt: Tamanho da janela FIFO de recalibração do baseline?
   default: '10'
   result: '{value}'
+bcp_reference_h_per_bcp:
+  prompt: >-
+    Reference rate frozen (h/BCP) para a âncora de alavancagem — a taxa de
+    cotação/benchmark do time, distinta do seed e do fator recalibrado. Gera
+    estimated_hours_reference (denominador estável que não colapsa). Muda só por
+    governança, nunca recalibra. Default = seed.
+  default: '4.13'
+  result: '{value}'
 bcp_data_folder:
   prompt: Pasta onde o baseline e artefatos BCP ficam armazenados?
   default: '{output_folder}/implementation-artifacts'

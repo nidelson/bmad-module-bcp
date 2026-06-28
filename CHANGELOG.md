@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.1.4](https://github.com/nidelson/bmad-module-bcp/compare/v0.1.3...v0.1.4) (2026-06-28)
+
+
+### Funcionalidades
+
+* **score:** expor estimated_hours_reference (âncora frozen de alavancagem) ([#33](https://github.com/nidelson/bmad-module-bcp/issues/33)) ([516b245](https://github.com/nidelson/bmad-module-bcp/commit/516b245a8b01734bc55f02cd08601860f5b0138d)), closes [#32](https://github.com/nidelson/bmad-module-bcp/issues/32)
+* **setup:** coletar bcp_reference_h_per_bcp no install (default = seed) ([#35](https://github.com/nidelson/bmad-module-bcp/issues/35)) ([38ae671](https://github.com/nidelson/bmad-module-bcp/commit/38ae671d698ffdc7d4851621ddc65c1630e5ba68)), closes [#32](https://github.com/nidelson/bmad-module-bcp/issues/32)
+
 ## [0.1.3](https://github.com/nidelson/bmad-module-bcp/compare/v0.1.2...v0.1.3) (2026-05-31)
 
 

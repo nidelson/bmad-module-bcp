@@ -120,6 +120,23 @@ def test_module_help_csv_rows_match_skills():
     assert len(codes) == len(set(codes)), f"duplicate menu-code in {codes}"
 
 
+def test_module_yaml_collects_reference_rate_defaulting_to_seed():
+    """issue #32 follow-up (1): setup must collect bcp_reference_h_per_bcp so the
+    frozen leverage anchor is a real install-time knob — not a manual-only config
+    edit. Default must equal the seed default (reference defaults to seed when the
+    operator does not set a deliberate benchmark)."""
+    data = yaml.safe_load(SETUP_MODULE_YAML.read_text(encoding="utf-8"))
+    entry = data.get("bcp_reference_h_per_bcp")
+    assert entry is not None, "module.yaml must offer bcp_reference_h_per_bcp"
+    assert "prompt" in entry, "the var needs a prompt so setup collects it generically"
+    assert entry["result"] == "{value}"
+    seed_default = data["bcp_baseline_seed"]["default"]
+    assert entry["default"] == seed_default, (
+        f"reference default {entry['default']!r} must match the seed default "
+        f"{seed_default!r} (reference defaults to seed when unset)"
+    )
+
+
 def test_path_results_do_not_double_prefix_project_root():
     """`{output_folder}` already resolves under `{project-root}`; a
     `result` template must not prefix `{project-root}/` on top of it or

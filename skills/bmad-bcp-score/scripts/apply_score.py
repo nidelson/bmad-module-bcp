@@ -16,9 +16,11 @@ preserved verbatim (PULSE owns those).
 
 Rescore history operational store (sprint-status.yaml):
 
-  --project-root <path>   Auto-detects sprint-status from BMAD config:
-                          _bmad/config.yaml → output_folder →
-                          pulse.pulse_data_folder + pulse_sprint_status_filename.
+  --project-root <path>   Auto-detects sprint-status from the resolved BMAD
+                          config (toml-first: config.toml via the core
+                          resolve_config.py, per-key fallback to config.yaml):
+                          output_folder → pulse_data_folder +
+                          pulse_sprint_status_filename.
                           If the resolved file exists → sprint-status mode.
                           If not → legacy mode (history in story frontmatter).
 
@@ -42,6 +44,11 @@ try:
 except ImportError:
     print("Error: pyyaml is required (PEP 723 dependency)", file=sys.stderr)
     sys.exit(2)
+
+# Sibling helper: resolves config toml-first (config.toml via the core
+# resolve_config.py) with a per-key fallback to the legacy config.yaml.
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+import bcp_config  # noqa: E402
 
 FIB = {"XS": 1, "S": 2, "M": 3, "L": 5, "XL": 8}
 HISTORY_CAP = 50
@@ -111,33 +118,30 @@ def validate_breakdown(breakdown: dict, rule_slugs: set[str]) -> int:
 
 
 def resolve_sprint_status(project_root: Path) -> Path | None:
-    """Derive sprint-status path from BMAD config token chain.
+    """Derive sprint-status path from the resolved BMAD config (toml-first).
 
-    Chain: project_root → _bmad/config.yaml
-             → output_folder (resolve {project-root})
-               → pulse.pulse_data_folder (resolve {output_folder})
-                 → + pulse_sprint_status_filename
+    The token chain values are resolved by ``bcp_config`` — config.toml
+    (``[core].output_folder`` + ``[modules.pulse]``, via the core
+    ``resolve_config.py`` so ``custom/config.toml`` overrides count) with a
+    per-key fallback to the legacy ``config.yaml``. Then:
 
-    Returns the resolved Path if the file exists, else None.
+      output_folder (resolve {project-root})
+        → pulse_data_folder (resolve {output_folder})
+          → + pulse_sprint_status_filename
+
+    Returns the resolved Path if the file exists, else None. None also when no
+    config source exists at all → legacy mode (history in story frontmatter).
     """
-    config_path = project_root / "_bmad/config.yaml"
-    if not config_path.exists():
-        return None
-    try:
-        cfg = yaml.safe_load(config_path.read_text(encoding="utf-8")) or {}
-    except yaml.YAMLError:
+    inputs = bcp_config.resolve_sprint_status_inputs(project_root)
+    if inputs is None:
         return None
 
-    raw_output = str(cfg.get("output_folder", "{project-root}/_bmad-output"))
-    output_folder = raw_output.replace("{project-root}", str(project_root))
-
-    pulse = cfg.get("pulse", {}) or {}
-    raw_data = str(pulse.get("pulse_data_folder",
-                             "{output_folder}/implementation-artifacts"))
-    data_folder = raw_data.replace("{output_folder}", output_folder) \
-                          .replace("{project-root}", str(project_root))
-
-    filename = str(pulse.get("pulse_sprint_status_filename", "sprint-status.yaml"))
+    output_folder = str(inputs["output_folder"]).replace(
+        "{project-root}", str(project_root))
+    data_folder = str(inputs["pulse_data_folder"]) \
+        .replace("{output_folder}", output_folder) \
+        .replace("{project-root}", str(project_root))
+    filename = str(inputs["pulse_sprint_status_filename"])
     candidate = Path(data_folder) / filename
     return candidate if candidate.exists() else None
 
@@ -198,7 +202,7 @@ def main() -> int:
                    help="archive prior bcp block into history before writing")
     p.add_argument("--project-root", type=Path, default=None,
                    help="BMAD project root; sprint-status path is auto-derived "
-                        "from _bmad/config.yaml token chain "
+                        "from the resolved config token chain, toml-first "
                         "(output_folder → pulse_data_folder → filename). "
                         "Ignored when --sprint-status is explicit.")
     p.add_argument("--sprint-status", type=Path, default=None,

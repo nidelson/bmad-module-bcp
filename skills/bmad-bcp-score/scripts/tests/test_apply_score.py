@@ -10,13 +10,16 @@ Run: uv run --with pytest --with pyyaml pytest skills/bmad-bcp-score/scripts/tes
 from __future__ import annotations
 
 import json
+import shutil
 import subprocess
 import sys
 from pathlib import Path
 
+import pytest
 import yaml
 
 SCRIPT = Path(__file__).resolve().parent.parent / "apply_score.py"
+CORE_RESOLVER = Path(__file__).resolve().parents[4] / "_bmad" / "scripts" / "resolve_config.py"
 
 
 def _rule(tmp: Path) -> Path:
@@ -444,7 +447,7 @@ def test_explicit_sprint_status_overrides_project_root(tmp_path: Path):
 
 
 def test_project_root_without_bmad_config_falls_back_to_legacy(tmp_path: Path):
-    """--project-root with no _bmad/config.yaml → legacy mode gracefully."""
+    """--project-root with no _bmad/config.{toml,yaml} → legacy mode gracefully."""
     story = _story(tmp_path, {"category": "backend", "estimated_hours": 10})
     bd = _bd(tmp_path, {"business_rules": [{"size": "M", "points": 3}]})
 
@@ -454,3 +457,101 @@ def test_project_root_without_bmad_config_falls_back_to_legacy(tmp_path: Path):
             "--project-root", str(tmp_path))
     assert r.returncode == 0, r.stderr
     assert json.loads(r.stdout)["history_store"] == "story-frontmatter"
+
+
+# ── toml-first sprint-status resolution (issue #36) ──────────────────────────
+
+needs_py311 = pytest.mark.skipif(
+    sys.version_info < (3, 11),
+    reason="core resolve_config.py needs stdlib tomllib (Python 3.11+)",
+)
+
+
+def _install_resolver(tmp_path: Path) -> None:
+    scripts = tmp_path / "_bmad" / "scripts"
+    scripts.mkdir(parents=True, exist_ok=True)
+    assert CORE_RESOLVER.exists(), f"core resolver missing at {CORE_RESOLVER}"
+    shutil.copy(CORE_RESOLVER, scripts / "resolve_config.py")
+
+
+def _bmad_config_toml(tmp_path: Path, output_folder: str,
+                      data_folder: str = "{output_folder}/implementation-artifacts") -> None:
+    """Write a minimal config.toml with [core] + [modules.pulse]."""
+    bmad = tmp_path / "_bmad"
+    bmad.mkdir(parents=True, exist_ok=True)
+    (bmad / "config.toml").write_text(
+        "[core]\n"
+        f'output_folder = "{output_folder}"\n\n'
+        "[modules.pulse]\n"
+        f'pulse_data_folder = "{data_folder}"\n'
+        'pulse_sprint_status_filename = "sprint-status.yaml"\n',
+        encoding="utf-8",
+    )
+
+
+@needs_py311
+def test_project_root_auto_detects_sprint_status_from_toml(tmp_path: Path):
+    """config.toml-only install resolves sprint-status via the core resolver."""
+    impl = tmp_path / "_bmad-output/implementation-artifacts"
+    impl.mkdir(parents=True)
+    sprint = impl / "sprint-status.yaml"
+    sprint.write_text("development_status: {}\n", encoding="utf-8")
+
+    _install_resolver(tmp_path)
+    _bmad_config_toml(tmp_path, output_folder=f"{tmp_path}/_bmad-output")
+
+    bcp_block = {"schema_version": "1.0", "rule_version": "1.0",
+                 "total": 2, "scored_at": "2026-01-01T00:00:00Z",
+                 "scored_by": "manual", "breakdown": {}}
+    story = _story(tmp_path, {"category": "backend", "estimated_hours": 10,
+                               "bcp": bcp_block})
+    bd = _bd(tmp_path, {"business_rules": [{"size": "M", "points": 3}]})
+
+    r = run("--story", str(story), "--breakdown", str(bd),
+            "--baseline", str(_baseline(tmp_path)), "--rule", str(_rule(tmp_path)),
+            "--scored-by", "rescore", "--rescore",
+            "--project-root", str(tmp_path))
+    assert r.returncode == 0, r.stderr
+    assert json.loads(r.stdout)["history_store"] == "sprint-status"
+    ss = yaml.safe_load(sprint.read_text())
+    assert story.stem in ss.get("bcp_metrics", {})
+
+
+@needs_py311
+def test_toml_wins_over_yaml_for_sprint_status(tmp_path: Path):
+    """When both config sources exist, the toml chain wins (per-key)."""
+    # toml points at the CORRECT location
+    good = tmp_path / "_bmad-output/implementation-artifacts"
+    good.mkdir(parents=True)
+    (good / "sprint-status.yaml").write_text("development_status: {}\n", encoding="utf-8")
+    _install_resolver(tmp_path)
+    _bmad_config_toml(tmp_path, output_folder=f"{tmp_path}/_bmad-output")
+
+    # yaml (legacy bridge) points at a WRONG/stale location
+    wrong = tmp_path / "stale/implementation-artifacts"
+    wrong.mkdir(parents=True)
+    (wrong / "sprint-status.yaml").write_text("development_status: {}\n", encoding="utf-8")
+    (tmp_path / "_bmad/config.yaml").write_text(
+        f"output_folder: '{tmp_path}/stale'\n"
+        "pulse:\n"
+        "  pulse_data_folder: '{output_folder}/implementation-artifacts'\n"
+        "  pulse_sprint_status_filename: sprint-status.yaml\n",
+        encoding="utf-8",
+    )
+
+    bcp_block = {"schema_version": "1.0", "rule_version": "1.0",
+                 "total": 2, "scored_at": "2026-01-01T00:00:00Z",
+                 "scored_by": "manual", "breakdown": {}}
+    story = _story(tmp_path, {"category": "backend", "estimated_hours": 10,
+                               "bcp": bcp_block})
+    bd = _bd(tmp_path, {"business_rules": [{"size": "M", "points": 3}]})
+
+    r = run("--story", str(story), "--breakdown", str(bd),
+            "--baseline", str(_baseline(tmp_path)), "--rule", str(_rule(tmp_path)),
+            "--scored-by", "rescore", "--rescore",
+            "--project-root", str(tmp_path))
+    assert r.returncode == 0, r.stderr
+    assert json.loads(r.stdout)["history_store"] == "sprint-status"
+    # history landed in the toml-resolved (correct) file, not the yaml (stale) one
+    assert story.stem in yaml.safe_load((good / "sprint-status.yaml").read_text()).get("bcp_metrics", {})
+    assert "bcp_metrics" not in yaml.safe_load((wrong / "sprint-status.yaml").read_text())

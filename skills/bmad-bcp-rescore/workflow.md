@@ -40,7 +40,7 @@ Skill **fina e sem scripts**: o determinístico (arquivar history, cap 50 + warn
      --scored-by rescore --rescore [--reference-h-per-bcp {bcp_reference_h_per_bcp}] --dry-run
    ```
 
-   Inclua `--reference-h-per-bcp` **somente** se `bcp_reference_h_per_bcp` estiver na config `bcp` (`_bmad/config.yaml`); omita quando ausente (cai no seed). Passar o mesmo valor no rescore mantém a âncora `estimated_hours_reference` consistente — **nunca** derive-o do baseline recalibrado.
+   Inclua `--reference-h-per-bcp` **somente** se `bcp_reference_h_per_bcp` estiver na config resolvida. Resolva **toml-first** rodando `python3 {project-root}/.claude/skills/bmad-bcp-score/scripts/bcp_config.py --project-root {project-root}` e lendo `bcp.bcp_reference_h_per_bcp` do JSON: o helper lê `[modules.bcp]` do `config.toml`, com **fallback** por chave para a seção `bcp` de `config.yaml`, e o **default** do `module.yaml` por último. Omita a flag quando o valor for o default de seed/ausente (cai no seed). Passar o mesmo valor no rescore mantém a âncora `estimated_hours_reference` consistente — **nunca** derive-o do baseline recalibrado.
 
 4. Apresente o preview em PT-BR: total antigo → novo, `estimated_hours` antigo → novo, fonte do `h_per_bcp`, `estimated_hours_reference` antigo → novo (âncora frozen), tamanho de `bcp.history` após arquivar, e **todas as `advisories`** (delta >50%, drift cumulativo >2×, truncate de history → "considere split em sub-story").
 5. Só após **confirmação explícita**, repita **sem** `--dry-run` para gravar.

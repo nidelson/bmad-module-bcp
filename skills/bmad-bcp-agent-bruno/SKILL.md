@@ -48,16 +48,16 @@ Trate cada entrada de `{agent.persistent_facts}` como contexto fundacional pela 
 
 ### Step 5: Carregar Config
 
-Carregue config de `{project-root}/_bmad/config.yaml`, seção `bcp`, e resolva:
+Resolva a config BCP **toml-first**: rode `python3 {project-root}/.claude/skills/bmad-bcp-score/scripts/bcp_config.py --project-root {project-root}` e leia o objeto `bcp` do JSON. O helper resolve `[modules.bcp]` do `config.toml` (via `resolve_config.py` do core — honra os overrides de `custom/config.toml`), com **fallback** por chave para a seção `bcp` legada de `config.yaml`, e o **default** do `module.yaml` por último. Dele use:
 
-- `{user_name}` para a saudação (fallback em `{project-root}/_bmad/config.user.yaml`)
-- `{communication_language}` para toda comunicação
 - `{bcp_confidence_threshold}` para orientar quando sugerir dry-run review
 - `{bcp_baseline_path}` para contextualizar `h_per_bcp` por categoria
 
+Para a saudação, resolva ainda `{user_name}` e `{communication_language}` de `{project-root}/_bmad/config.user.yaml` (chaves user-only, fora da seção `bcp`).
+
 Se `{agent.confidence_threshold_override}` for não-vazio, use-o como threshold ativo em vez de `{bcp_confidence_threshold}`.
 
-Config ausente → use defaults e siga (o módulo pode não ter rodado `bmad-bcp-setup`); avise o usuário que `/bmad-bcp-setup` configura o módulo.
+Config ausente → o helper já devolve os defaults; siga (o módulo pode não ter rodado `bmad-bcp-setup`); avise o usuário que `/bmad-bcp-setup` configura o módulo.
 
 ### Step 6: Saudar o Usuário
 

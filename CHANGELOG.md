@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.1.5](https://github.com/nidelson/bmad-module-bcp/compare/v0.1.4...v0.1.5) (2026-07-17)
+
+
+### Funcionalidades
+
+* **config:** BCP toml-first — resolve_config.py + fallback yaml ([#36](https://github.com/nidelson/bmad-module-bcp/issues/36)) ([#37](https://github.com/nidelson/bmad-module-bcp/issues/37)) ([78b8182](https://github.com/nidelson/bmad-module-bcp/commit/78b818254cc210315aa02377b5d0e35ae0f65993))
+
 ## [0.1.4](https://github.com/nidelson/bmad-module-bcp/compare/v0.1.3...v0.1.4) (2026-06-28)
 
 

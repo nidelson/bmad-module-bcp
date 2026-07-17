@@ -4,13 +4,14 @@
 
 Instala e configura o módulo BCP (Business Complexity Points) num projeto BMAD. A identidade do módulo (nome, code, versão) vem de `assets/module.yaml`. Coleta preferências do usuário e as escreve em três arquivos:
 
-- **`{project-root}/_bmad/config.yaml`** — config compartilhada do projeto: settings core na raiz (ex. `output_folder`, `document_output_language`) mais uma seção por módulo. Chaves user-only (`user_name`, `communication_language`) **nunca** vão aqui.
+- **`{project-root}/_bmad/custom/config.toml`** — camada durável, committed, **toml-first** (issue #36): a seção do módulo `[modules.bcp]` é gravada aqui (via `tomlkit`, preservando comentários e outras seções). É a camada que o `resolve_config.py` do core lê com prioridade sobre os defaults do installer em `config.toml`.
+- **`{project-root}/_bmad/config.yaml`** — bridge YAML legado: só settings core na raiz (ex. `output_folder`, `document_output_language`). A seção `bcp` **não** é mais gravada aqui; uma seção legada preexistente é **removida** (strip) no merge — esse é o caminho de migração yaml→toml (re-rodar o setup migra). Chaves user-only (`user_name`, `communication_language`) **nunca** vão aqui.
 - **`{project-root}/_bmad/config.user.yaml`** — settings pessoais, gitignorados: `user_name`, `communication_language` e qualquer variável de módulo marcada `user_setting: true`.
 - **`{project-root}/_bmad/module-help.csv`** — registra as capabilities do módulo no sistema de help.
 
 Além da config, o setup: aplica o **capability gate BMAD ≥6.6.0**, semeia o `bcp-baseline.yaml` por categoria, registra o agente Bruno no manifest, e emite um override `customize.toml` que conecta o scoring BCP ao workflow `bmad-create-story`.
 
-Os scripts de config usam um padrão anti-zombie — entradas existentes deste módulo são removidas antes de gravar as novas, então valores velhos nunca persistem.
+Os scripts de config usam um padrão anti-zombie — a seção do módulo em `custom/config.toml` tem suas chaves gerenciadas sobrescritas (upsert, preservando chaves human-authored), e qualquer seção `bcp` legada no `config.yaml` é removida, então valores velhos nunca persistem em split-brain.
 
 `{project-root}` é um **token literal** nos valores de config — nunca substitua por um caminho real. Sinaliza ao LLM consumidor que o valor é relativo à raiz do projeto.
 
@@ -40,7 +41,7 @@ O script lê a versão precisa de `{project-root}/_bmad/_config/manifest.yaml` e
 2. **Prepend steps:** execute cada entrada de `workflow.activation_steps_prepend` em ordem.
 3. **Persistent facts:** trate cada entrada de `workflow.persistent_facts` como contexto fundacional pela sessão toda. Entradas com prefixo `file:` carregam o conteúdo do path/glob sob `{project-root}`; demais são fatos verbatim.
 4. Leia `assets/module.yaml` para metadados e definições de variáveis (o campo `code` é o identificador do módulo).
-5. Verifique se `{project-root}/_bmad/config.yaml` existe — se já houver seção `bcp`, informe que é uma atualização.
+5. Verifique se já há config do módulo — seção `[modules.bcp]` em `{project-root}/_bmad/custom/config.toml`, ou uma seção `bcp` legada em `{project-root}/_bmad/config.yaml`. Se houver, informe que é uma atualização (a legada será migrada para toml).
 6. Verifique config legacy per-module em `{project-root}/_bmad/bcp/config.yaml` e `{project-root}/_bmad/core/config.yaml`. Se existirem:
    - Sem seção `bcp` no `config.yaml` consolidado → **install fresco**: informe que config do installer foi detectada e será consolidada.
    - Com seção `bcp` já presente → **migração legacy**: informe que valores legacy serão usados como defaults de fallback.
@@ -66,11 +67,11 @@ Peça os valores ao usuário. Mostre defaults entre colchetes. Apresente tudo ju
 Escreva um JSON temporário com as respostas no formato `{"core": {...}, "module": {...}}` (omita `core` se já existir). Rode os dois scripts (paralelos — escrevem arquivos diferentes):
 
 ```bash
-python3 scripts/merge-config.py --config-path "{project-root}/_bmad/config.yaml" --user-config-path "{project-root}/_bmad/config.user.yaml" --module-yaml assets/module.yaml --answers {temp-file} --legacy-dir "{project-root}/_bmad"
+python3 scripts/merge-config.py --config-path "{project-root}/_bmad/config.yaml" --custom-config-path "{project-root}/_bmad/custom/config.toml" --user-config-path "{project-root}/_bmad/config.user.yaml" --module-yaml assets/module.yaml --answers {temp-file} --legacy-dir "{project-root}/_bmad"
 python3 scripts/merge-help-csv.py --target "{project-root}/_bmad/module-help.csv" --source assets/module-help.csv --legacy-dir "{project-root}/_bmad" --module-code bcp
 ```
 
-Ambos imprimem JSON em stdout. Se algum sair não-zero, mostre o erro e pare. Os scripts leem valores legacy como fallback e apagam os arquivos legacy após o merge — confira `legacy_configs_deleted` e `legacy_csvs_deleted`.
+`merge-config.py` grava a seção do módulo `[modules.bcp]` em `custom/config.toml` (**toml-first**, via `tomlkit` — preserva comentários/outras seções), grava só as chaves core no `config.yaml`, e faz **strip** de qualquer seção `bcp` legada do `config.yaml` (migração yaml→toml). O `--custom-config-path` tem default `{dir do --config-path}/custom/config.toml`, mas passá-lo explícito deixa o destino claro. Ambos imprimem JSON em stdout (confira `custom_config_path`, `module_keys`). Se algum sair não-zero, mostre o erro e pare. Os scripts leem valores legacy como fallback e apagam os arquivos legacy após o merge — confira `legacy_configs_deleted` e `legacy_csvs_deleted`.
 
 ## Register Agent in Manifest
 
@@ -159,7 +160,7 @@ Se algum passo acima falhar, **não** bloqueie o resto do setup. Reporte a falha
 
 ## Confirm
 
-Use o JSON dos scripts para exibir o que foi escrito: valores de config (core na raiz, módulo na seção `bcp`), user settings em `config.user.yaml` (`user_keys`), entradas de help, install fresco vs update, baseline semeado vs preexistente, migração legacy (se houve). Depois exiba o `module_greeting` de `assets/module.yaml`.
+Use o JSON dos scripts para exibir o que foi escrito: valores de config (core na raiz do `config.yaml`, módulo em `custom/config.toml [modules.bcp]` — `module_keys`/`custom_config_path`), user settings em `config.user.yaml` (`user_keys`), entradas de help, install fresco vs update, baseline semeado vs preexistente, migração legacy/strip da seção `bcp` do yaml (se houve). Depois exiba o `module_greeting` de `assets/module.yaml`.
 
 ## Outcome
 

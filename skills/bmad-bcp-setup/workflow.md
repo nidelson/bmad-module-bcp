@@ -67,27 +67,35 @@ Peça os valores ao usuário. Mostre defaults entre colchetes. Apresente tudo ju
 Escreva um JSON temporário com as respostas no formato `{"core": {...}, "module": {...}}` (omita `core` se já existir). Rode os dois scripts (paralelos — escrevem arquivos diferentes):
 
 ```bash
-python3 scripts/merge-config.py --config-path "{project-root}/_bmad/config.yaml" --custom-config-path "{project-root}/_bmad/custom/config.toml" --user-config-path "{project-root}/_bmad/config.user.yaml" --module-yaml assets/module.yaml --answers {temp-file} --legacy-dir "{project-root}/_bmad"
+uv run scripts/merge-config.py --config-path "{project-root}/_bmad/config.yaml" --custom-config-path "{project-root}/_bmad/custom/config.toml" --user-config-path "{project-root}/_bmad/config.user.yaml" --module-yaml assets/module.yaml --answers {temp-file} --legacy-dir "{project-root}/_bmad"
 python3 scripts/merge-help-csv.py --target "{project-root}/_bmad/module-help.csv" --source assets/module-help.csv --legacy-dir "{project-root}/_bmad" --module-code bcp
 ```
 
+> **Nota (PEP 723):** só o `merge-config.py` roda via `uv run` — ele declara dependências de terceiros (`pyyaml`, `tomlkit`) no header inline `# /// script`. Com `python3` puro falha: `Error: tomlkit is required (PEP 723 dependency)`. `uv run` lê o header e provisiona num ambiente efêmero. Os demais scripts deste skill são stdlib-only e rodam com `python3`.
+
 `merge-config.py` grava a seção do módulo `[modules.bcp]` em `custom/config.toml` (**toml-first**, via `tomlkit` — preserva comentários/outras seções), grava só as chaves core no `config.yaml`, e faz **strip** de qualquer seção `bcp` legada do `config.yaml` (migração yaml→toml). O `--custom-config-path` tem default `{dir do --config-path}/custom/config.toml`, mas passá-lo explícito deixa o destino claro. Ambos imprimem JSON em stdout (confira `custom_config_path`, `module_keys`). Se algum sair não-zero, mostre o erro e pare. Os scripts leem valores legacy como fallback e apagam os arquivos legacy após o merge — confira `legacy_configs_deleted` e `legacy_csvs_deleted`.
 
-## Register Agent in Manifest
+## Register Agent in Party Mode Roster
 
-Registre o agente Bruno no manifest do projeto para ele aparecer no Party Mode e features agent-aware.
+Registre o agente Bruno para ele entrar no roster do Party Mode e features agent-aware.
 
-Verifique `{project-root}/_bmad/_config/agent-manifest.csv`:
-- Se **existe**: faça merge da entrada de Bruno com anti-zombie reusando o script genérico de merge de CSV:
+O Party Mode monta o roster a partir da tabela `[agents]` resolvida pelo `resolve_config.py` — deep-merge de `{project-root}/_bmad/config.toml` (base) e `{project-root}/_bmad/custom/config.toml` (team). Os módulos oficiais têm suas entradas `[agents.*]` escritas no `config.toml` base pelo installer do BMAD core, mas um **módulo custom** como o BCP nunca é escrito lá — então sem este passo o Bruno fica instalado como skill mas invisível ao Party Mode (`/bmad-party-mode` nunca o lista). Registre-o na camada team `custom/config.toml`, que sobrevive a re-install:
 
-  ```bash
-  python3 scripts/merge-help-csv.py --target "{project-root}/_bmad/_config/agent-manifest.csv" --source assets/agent-manifest-fragment.csv --module-code bcp
-  ```
+```bash
+uv run scripts/register-party-agent.py --project-root "{project-root}" --fragment assets/agent-manifest-fragment.csv
+```
 
-  `--module-code bcp` escopa a remoção anti-zombie às linhas cuja primeira coluna é "bcp" (a coluna `name` no agent-manifest.csv).
-- Se **não existe**: pule e informe que o manifest não foi encontrado — Bruno ainda funciona via invocação direta da skill, mas não aparece no Party Mode.
+O script faz upsert de `[agents.bmad-bcp-agent-bruno]` (anti-zombie, idempotente) a partir dos valores do `agent-manifest-fragment.csv`, preservando comentários e outras seções (tomlkit round-trip). Roda via `uv run` pela dependência PEP 723 `tomlkit`. Confira `agent_key` e `custom_config_path` no JSON.
 
-Em caso de sucesso, informe: "Agente Bruno registrado no agent-manifest.csv — disponível no Party Mode e features agent-aware."
+Em caso de sucesso, informe: "Agente Bruno registrado no roster do Party Mode (`_bmad/custom/config.toml` → `[agents.bmad-bcp-agent-bruno]`) — rode `/bmad-party-mode` para vê-lo. Para destacá-lo, adicione um grupo curado (ex.: sala de planning/estimativa) em `_bmad/custom/bmad-party-mode.toml`."
+
+### `agent-manifest.csv` legado (opcional, compat)
+
+Layouts BMAD antigos também leem `{project-root}/_bmad/_config/agent-manifest.csv`. Se esse arquivo existir, faça merge adicional do fragment (inócuo onde não é usado). Se não existir, pule — o registro em `[agents]` acima é o que o Party Mode de fato lê.
+
+```bash
+python3 scripts/merge-help-csv.py --target "{project-root}/_bmad/_config/agent-manifest.csv" --source assets/agent-manifest-fragment.csv --module-code bcp
+```
 
 ## Seed Baseline
 

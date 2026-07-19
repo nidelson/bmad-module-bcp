@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.1.7](https://github.com/nidelson/bmad-module-bcp/compare/v0.1.6...v0.1.7) (2026-07-19)
+
+
+### Funcionalidades
+
+* **bmad-bcp-setup:** reconcile-skills self-heal (paridade com o PULSE) ([#41](https://github.com/nidelson/bmad-module-bcp/issues/41)) ([37dd24a](https://github.com/nidelson/bmad-module-bcp/commit/37dd24a8d72df9602736b748754152c46d0e0048))
+
 ## [0.1.6](https://github.com/nidelson/bmad-module-bcp/compare/v0.1.5...v0.1.6) (2026-07-19)
 
 

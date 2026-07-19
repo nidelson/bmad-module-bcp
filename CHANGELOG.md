@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.1.6](https://github.com/nidelson/bmad-module-bcp/compare/v0.1.5...v0.1.6) (2026-07-19)
+
+
+### Funcionalidades
+
+* **bmad-bcp-setup:** registra Bruno no party-mode + uv run no merge-config ([#39](https://github.com/nidelson/bmad-module-bcp/issues/39)) ([47c5784](https://github.com/nidelson/bmad-module-bcp/commit/47c57841b70d610135e907c511d2e95a59c8b205))
+
 ## [0.1.5](https://github.com/nidelson/bmad-module-bcp/compare/v0.1.4...v0.1.5) (2026-07-17)
 
 

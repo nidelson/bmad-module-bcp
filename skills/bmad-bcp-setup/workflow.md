@@ -21,6 +21,22 @@ Os scripts de config usam um padrão anti-zombie — a seção do módulo em `cu
 - `{skill-root}` resolve o diretório instalado desta skill (onde vive `customize.toml`).
 - `{project-root}`-prefixed paths resolvem da raiz do projeto.
 
+## Reconcile Installed Skills (Self-Heal)
+
+Rode isto **primeiro de tudo** (antes do Capability Gate). O installer do BMAD faz deploy *aditivo* quando o BCP já está instalado: arquivos novos são copiados, mas os pré-existentes (`module.yaml`, `SKILL.md`, `workflow.md`, scripts…) nunca são sobrescritos e skills renomeadas/removidas não são podadas — atualizar por cima deixa um estado misto travado na versão antiga. Este passo força a sincronia de cada skill `bmad-bcp-*` a partir da fonte autoritativa (o cache de módulos custom do BMAD, recém-buscado).
+
+```bash
+python3 scripts/reconcile-skills.py --project-root "{project-root}"
+```
+
+Idempotente — numa árvore já sincronizada não escreve nada e reporta `action: up_to_date`. Não-fatal em install fresh: sem fonte/cache, sai 0 com `action: skipped_no_source` — siga normalmente. Exit codes: 0=sucesso (inclui `up_to_date`/`skipped_no_source`), 1=validação, 2=runtime. Mostre qualquer saída não-zero e pare. Stdlib-only — roda com `python3` (sem `uv run`).
+
+Inspecione o campo `action` do JSON:
+- `up_to_date` / `skipped_no_source` — siga em silêncio.
+- `reconciled` — reporte `from_version → to_version`. Se o payload trouxer `notice` dizendo que o `bmad-bcp-setup` foi atualizado in-place, diga ao usuário para rodar `/bmad-bcp-setup` mais uma vez (para a versão atual da skill executar) e pare.
+
+`python3 scripts/reconcile-skills.py --help` para uso completo (inclui `--source` e `--dry-run`).
+
 ## Capability Gate (rodar PRIMEIRO)
 
 BCP requer **BMAD ≥6.6.0** — o framework de hooks do `customize.toml` (`activation_steps_*`, `persistent_facts`) é a superfície de integração que o BCP usa. Greenfield: sem caminhos de compat para versões antigas.

@@ -58,7 +58,7 @@ bcp_estimation_basis:
   default: bcp
   result: '{value}'
 bcp_baseline_seed:
-  prompt: Seed de horas por BCP para cold start (referência CI&T 2014)?
+  prompt: Seed de horas por BCP para cold start (valor de partida; a CI&T nao publica fator de conversao)?
   default: '4.13'
   result: '{value}'
 bcp_baseline_min_samples:

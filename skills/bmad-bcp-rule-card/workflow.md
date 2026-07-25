@@ -4,7 +4,7 @@
 
 Renderiza a régua canônica **Business Complexity Points (BCP)** da CI&T para consulta rápida durante scoring: 10 elementos de complexidade × 5 tamanhos (XS, S, M, L, XL) na escala Fibonacci [1, 2, 3, 5, 8], com a definição de cada elemento e o descritor verbatim de cada célula.
 
-A régua vem de `assets/bcp-rule.yaml` — transcrição **verbatim e imutável** do ruler publicado pela CI&T, licenciado **CC BY-NC-ND 4.0**. Esta skill só **lê e exibe**; nunca modifica a regra.
+A régua vem de `assets/bcp-rule.yaml` — transcrição **verbatim** do ruler publicado pela CI&T, licenciado **MIT** desde maio/2026 (`flow-ciandt/bcp-agent`). Esta skill só **lê e exibe**; nunca modifica a regra.
 
 ## Conventions
 
@@ -27,7 +27,7 @@ Produza um card legível em `{communication_language}`:
 
 1. **Cabeçalho** — título "Business Complexity Ruler" + a escala de tamanhos com pontos: `XS=1 · S=2 · M=3 · L=5 · XL=8` (de `sizes`).
 2. **Tabela** — uma linha por elemento, colunas: Elemento · Definição · XS · S · M · L · XL. Para células `null`, mostre um traço `—`. Marque os elementos com `always_there: true` (ex.: badge "sempre presente") — o ruler os agrupa sob "ALWAYS THERE".
-3. **Rodapé de atribuição (OBRIGATÓRIO, nunca omitir)** — exiba o bloco `license.attribution` verbatim + o link `license.url`. A licença CC BY-NC-ND exige atribuição em toda redistribuição/exibição; emitir o card sem a atribuição viola a licença.
+3. **Rodapé de atribuição (OBRIGATÓRIO, nunca omitir)** — exiba o bloco `license.attribution` verbatim + o link `license.url`. A MIT exige preservar o aviso de copyright e o texto da licença; emitir o card sem a atribuição descumpre a licença.
 
 Se o terminal/contexto for estreito, prefira layout por elemento (lista) em vez de tabela larga — mas as três partes acima são invariantes.
 
@@ -41,14 +41,14 @@ Após o card ser renderizado, siga `workflow.on_complete` resolvido na ativaçã
 **Particularidades desta skill (read-only):**
 
 - Não há artefato persistido — o hook roda **após o display**, não após persistência. Use para oferecer follow-up actions, sugerir skills relacionadas, ou logar a consulta.
-- O hook **NÃO pode modificar** `assets/bcp-rule.yaml` (ND da licença CC BY-NC-ND — imutabilidade load-bearing).
+- O hook **NÃO pode modificar** `assets/bcp-rule.yaml` (imutabilidade por decisão de projeto — comparabilidade de score entre times).
 - Erro no hook é **warn** — o card já foi exibido.
 
 Customizar override (team-level, committed): edite `{project-root}/_bmad/custom/bmad-bcp-rule-card.toml`. User-level (gitignored): `bmad-bcp-rule-card.user.toml`.
 
 ## Design Notes
 
-- **Imutabilidade load-bearing:** `assets/bcp-rule.yaml` é CC BY-NC-ND 4.0 (ND = sem derivações). Nunca edite elementos/definições/descritores/pontos. Só os blocos `hints` editoriais (se existirem, marcados como autorais do BCP — não parte do framework CI&T) seriam mutáveis.
+- **Imutabilidade por decisão de projeto:** `assets/bcp-rule.yaml` é MIT — legalmente modificável, mas editar elementos/definições/descritores/pontos quebra a comparabilidade do score entre times. Divergir exige bump de `rule_version`. Só os blocos `hints` editoriais (se existirem, marcados como autorais do BCP — não parte do framework CI&T) seriam mutáveis.
 - Sem scripts: renderizar YAML→tabela é capability nativa do LLM; um script não agregaria valor (princípio outcome-driven).
 - A definição de **New Domain Entities** no ruler canônico fala de "interactions ... sources/destinations ... durability of the information exchanged" — parece semântica de Boundaries, mas é o texto **publicado verbatim**. Não corrija: ND.
 - **Customization surface:** `customize.toml` segue o padrão BMad — três camadas (skill defaults < team `<project>/_bmad/custom/*.toml` < user `*.user.toml`) resolvidas por `_bmad/scripts/resolve_customization.py`. `on_complete` é o extension point para encadear ações pós-display sem fork da skill.

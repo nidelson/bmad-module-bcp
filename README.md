@@ -4,7 +4,7 @@
 [![BMAD Version](https://img.shields.io/badge/BMAD-%3E%3D6.6.0-blue)](https://docs.bmad-method.org/)
 [![GitHub release](https://img.shields.io/github/v/release/nidelson/bmad-module-bcp)](https://github.com/nidelson/bmad-module-bcp/releases)
 [![Module: MIT](https://img.shields.io/badge/Module-MIT-yellow.svg)](LICENSE)
-[![Rule: CC BY-NC-ND 4.0](https://img.shields.io/badge/BCP%20Rule-CC%20BY--NC--ND%204.0-lightgrey.svg)](ATTRIBUTION.md)
+[![Rule: MIT](https://img.shields.io/badge/BCP%20Rule-MIT-yellow.svg)](ATTRIBUTION.md)
 
 > **Estimativa por complexidade, não por chute.**
 
@@ -50,35 +50,41 @@ Depois, dentro do projeto:
 
 ## Skills inclusas
 
-| Comando | Faz | Depende de |
-| --- | --- | --- |
-| `/bmad-bcp-setup` | Instala, configura, semeia baseline, registra o customize hook | — |
-| `/bmad-bcp-rule-card` | Renderiza a régua BCP + atribuição CC BY-NC-ND | — |
-| `/bmad-bcp-score` | Pontua uma story, deriva `estimated_hours` | setup |
-| `/bmad-bcp-score-batch` | Pontua várias stories em lote (retroativo) | score |
-| `/bmad-bcp-rescore` | Repontua story já pontuada (+ history + horas) | score |
-| `/bmad-bcp-recalibrate` | Recalibra `h_per_bcp` por categoria com horas reais | score |
-| `/bmad-bcp-backfill-baseline` | Mata o cold-start do baseline com o histórico do squad | recalibrate |
-| `/bmad-bcp-agent-bruno` | Coach de complexidade (agente facilitador opcional) | setup |
+| Comando                       | Faz                                                            | Depende de  |
+| ----------------------------- | -------------------------------------------------------------- | ----------- |
+| `/bmad-bcp-setup`             | Instala, configura, semeia baseline, registra o customize hook | —           |
+| `/bmad-bcp-rule-card`         | Renderiza a régua BCP + atribuição MIT                         | —           |
+| `/bmad-bcp-score`             | Pontua uma story, deriva `estimated_hours`                     | setup       |
+| `/bmad-bcp-score-batch`       | Pontua várias stories em lote (retroativo)                     | score       |
+| `/bmad-bcp-rescore`           | Repontua story já pontuada (+ history + horas)                 | score       |
+| `/bmad-bcp-recalibrate`       | Recalibra `h_per_bcp` por categoria com horas reais            | score       |
+| `/bmad-bcp-backfill-baseline` | Mata o cold-start do baseline com o histórico do squad         | recalibrate |
+| `/bmad-bcp-agent-bruno`       | Coach de complexidade (agente facilitador opcional)            | setup       |
 
 ## Bruno — seu coach de complexidade
 
-`/bmad-bcp-agent-bruno` ativa o **Bruno**, agente facilitador opcional. Lema: *"Régua antes de régua."* Ele conduz o scoring elemento a elemento, questiona tamanhos inflados e explica a régua — útil para times entrando no BCP. Não é obrigatório: as skills `score`/`rescore` rodam sem ele.
+`/bmad-bcp-agent-bruno` ativa o **Bruno**, agente facilitador opcional. Lema: _"Régua antes de régua."_ Ele conduz o scoring elemento a elemento, questiona tamanhos inflados e explica a régua — útil para times entrando no BCP. Não é obrigatório: as skills `score`/`rescore` rodam sem ele.
 
 ## Como funciona
 
-1. **Régua imutável.** `bcp-rule.yaml` é a régua da CI&T transcrita verbatim (CC BY-NC-ND — conteúdo não pode ser alterado; só hints editoriais são mutáveis).
+1. **Régua imutável.** `bcp-rule.yaml` é a régua da CI&T transcrita verbatim. Sob MIT a imutabilidade não é mais exigência legal — é decisão de design: score só é comparável entre times se a régua for a mesma. Só hints editoriais são mutáveis. Ver [ATTRIBUTION.md](ATTRIBUTION.md).
 2. **Score.** Cada elemento aplicável recebe um tamanho; o tamanho mapeia para pontos Fibonacci (XS=1, S=2, M=3, L=5, XL=8). `total` = soma do breakdown.
 3. **Horas.** `estimated_hours = total × h_per_bcp(categoria)`. O fator vem do `bcp-baseline.yaml`.
 4. **Aprendizado.** `recalibrate` alimenta horas reais numa janela FIFO por categoria; ao atingir `min_samples`, a categoria sai do seed (`is_seed: false`) e passa a usar a média móvel.
 
 ### Baseline e recalibração
 
-| Parâmetro | Default | Significado |
-| --- | --- | --- |
-| `bcp_baseline_seed` | `4.13` | Horas por BCP no cold start (referência CI&T 2014) |
-| `bcp_baseline_min_samples` | `5` | Amostras antes de uma categoria sair do seed |
-| `bcp_baseline_rolling_window` | `10` | Tamanho da janela FIFO de recalibração |
+| Parâmetro                     | Default | Significado                                               |
+| ----------------------------- | ------- | --------------------------------------------------------- |
+| `bcp_baseline_seed`           | `4.13`  | Horas por BCP no cold start (valor de partida — ver nota) |
+| `bcp_baseline_min_samples`    | `5`     | Amostras antes de uma categoria sair do seed              |
+| `bcp_baseline_rolling_window` | `10`    | Tamanho da janela FIFO de recalibração                    |
+
+> **Sobre o `4.13`:** é um **valor de partida**, não uma constante publicada pela CI&T. O framework
+> define o H/BCP como métrica **empírica por organização** — o repositório oficial e a documentação
+> não publicam fator de conversão. O seed existe só para o cold start; assim que a categoria atinge
+> `min_samples`, ele é substituído pela média móvel das horas reais e não deve mais aparecer em
+> nenhum `estimated_hours` gravado.
 
 O baseline vive em `{output_folder}/implementation-artifacts/bcp-baseline.yaml`. Squad com histórico? `/bmad-bcp-backfill-baseline <glob>` pontua o passado e calibra sem esperar o acúmulo natural.
 
@@ -86,11 +92,11 @@ O baseline vive em `{output_folder}/implementation-artifacts/bcp-baseline.yaml`.
 
 Existem **três** fatores `h_per_bcp` com papéis distintos — não confunda:
 
-| Número | Ex. | Muda como | Deriva | Serve a |
-| --- | --- | --- | --- | --- |
-| **Seed** | `4.13` | uma vez, no setup | cold-start interno | bootstrap |
-| **Recalibrado** (vivo) | `~0.5` | contínuo, automático (`recalibrate`) | `estimated_hours` — o **plano** | **previsibilidade** |
-| **Referência** (frozen) | `5.0` | raro, por **governança** | `estimated_hours_reference` — a **âncora** | **alavancagem estável** |
+| Número                  | Ex.    | Muda como                            | Deriva                                     | Serve a                 |
+| ----------------------- | ------ | ------------------------------------ | ------------------------------------------ | ----------------------- |
+| **Seed**                | `4.13` | uma vez, no setup                    | cold-start interno                         | bootstrap               |
+| **Recalibrado** (vivo)  | `~0.5` | contínuo, automático (`recalibrate`) | `estimated_hours` — o **plano**            | **previsibilidade**     |
+| **Referência** (frozen) | `5.0`  | raro, por **governança**             | `estimated_hours_reference` — a **âncora** | **alavancagem estável** |
 
 `estimated_hours = total × recalibrado` segue a realidade do time — ótimo para planejar, mas faz a alavancagem (`estimated_hours / actual_hours`) colapsar para ~1× conforme a categoria calibra. `estimated_hours_reference = total × referência` usa um denominador **frozen** que não colapsa — é o número de ROI estável que a liderança pede. O BCP é dono de **toda** conversão BCP→horas (single-writer); o PULSE só **lê** os dois campos e divide. Sem `bcp_reference_h_per_bcp` configurado, a âncora cai no seed (computável desde o dia 1).
 
@@ -117,14 +123,14 @@ A reference rate é um knob deliberado (benchmark de marketing/indústria), não
 
 Setup grava as respostas via o sistema de config em quatro camadas do BMAD. Principais variáveis:
 
-| Variável | Default | Efeito |
-| --- | --- | --- |
-| `bcp_overwrite_estimated_hours` | `yes` | BCP é dono de `estimated_hours` (preserva `_pre_bcp`) |
-| `bcp_non_interactive_default` | `yes` | Auto-score direto; dry-run só em divergência |
-| `bcp_confidence_threshold` | `0.75` | Acima disso, pula o dry-run review |
-| `bcp_estimation_basis` | `bcp` | Rótulo gravado em `estimated_hours_basis` |
-| `bcp_reference_h_per_bcp` | _(seed)_ | Reference rate frozen da âncora de alavancagem; muda só por governança (ledger) |
-| `bcp_data_folder` | `{output_folder}/implementation-artifacts` | Onde baseline e artefatos ficam |
+| Variável                        | Default                                    | Efeito                                                                          |
+| ------------------------------- | ------------------------------------------ | ------------------------------------------------------------------------------- |
+| `bcp_overwrite_estimated_hours` | `yes`                                      | BCP é dono de `estimated_hours` (preserva `_pre_bcp`)                           |
+| `bcp_non_interactive_default`   | `yes`                                      | Auto-score direto; dry-run só em divergência                                    |
+| `bcp_confidence_threshold`      | `0.75`                                     | Acima disso, pula o dry-run review                                              |
+| `bcp_estimation_basis`          | `bcp`                                      | Rótulo gravado em `estimated_hours_basis`                                       |
+| `bcp_reference_h_per_bcp`       | _(seed)_                                   | Reference rate frozen da âncora de alavancagem; muda só por governança (ledger) |
+| `bcp_data_folder`               | `{output_folder}/implementation-artifacts` | Onde baseline e artefatos ficam                                                 |
 
 Para mudar de forma durável: re-rodar o installer ou usar as camadas `_bmad/custom/`. **Nunca** editar `_bmad/config.toml` direto (installer-owned, regenerado a cada install).
 
@@ -164,10 +170,10 @@ Contrato completo: [docs/integration/pulse.md](docs/integration/pulse.md). Hook 
 
 ## Licença
 
-Split intencional e *load-bearing*:
+Módulo e régua compartilham a mesma licença desde a republicação do framework em maio/2026:
 
 - **Código do módulo** — MIT ([LICENSE](LICENSE)).
-- **Régua BCP embarcada** (`skills/bmad-bcp-rule-card/assets/bcp-rule.yaml`) — obra da CI&T, **CC BY-NC-ND 4.0**. O conteúdo da régua é imutável (ND). Ver [ATTRIBUTION.md](ATTRIBUTION.md) — aceite da atribuição é pré-requisito de uso, não rodapé.
+- **Régua BCP embarcada** (`skills/bmad-bcp-rule-card/assets/bcp-rule.yaml`) — obra da CI&T, **MIT** desde maio/2026 ([flow-ciandt/bcp-agent](https://github.com/flow-ciandt/bcp-agent)). Antes circulava sob CC BY-NC-ND 4.0. A régua segue imutável por decisão de design, não mais por imposição da licença. Ver [ATTRIBUTION.md](ATTRIBUTION.md).
 
 ## Requisitos
 

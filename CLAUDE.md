@@ -17,9 +17,9 @@ Dois módulos BMAD frouxamente acoplados, **integração schema-mediated**: nenh
 - **BCP escreve:** `estimated_hours` (sobrescreve, preservando `estimated_hours_pre_bcp`), `estimated_hours_basis`, bloco `bcp.*`, `bcp.history` (trilha de auditoria, cap 50).
 - **PULSE lê:** `estimated_hours` de forma agnóstica ao escritor; renderiza seção condicional quando `pulse_estimation_method=bcp`.
 
-Entregáveis v0.1.0: 8 skills (`bmad-bcp-setup`, `-score`, `-score-batch`, `-rescore`, `-recalibrate`, `-backfill-baseline`, `-rule-card`, `-agent-bruno`), persona Bruno, `bcp-rule.yaml` imutável, baseline por categoria `bcp-baseline.yaml` (seed 4.13, `min_samples=5`, `rolling_window=10`).
+Entregáveis v0.1.0: 8 skills (`bmad-bcp-setup`, `-score`, `-score-batch`, `-rescore`, `-recalibrate`, `-backfill-baseline`, `-rule-card`, `-agent-bruno`), persona Bruno, `bcp-rule.yaml` imutável por decisão de projeto, baseline por categoria `bcp-baseline.yaml` (seed 4.13, `min_samples=5`, `rolling_window=10`).
 
-**Split de licença é load-bearing:** código do módulo = MIT; regra BCP embarcada da CI&T = CC BY-NC-ND 4.0, imutável (só hints editoriais mutáveis). `ATTRIBUTION.md` é pré-requisito de aceite, não rodapé.
+**Licença unificada (desde maio/2026):** código do módulo e regra BCP embarcada da CI&T são ambos MIT — o framework foi republicado como open source em `flow-ciandt/bcp-agent`. O split CC BY-NC-ND que era load-bearing no design original deixou de existir. A régua segue imutável por **decisão de projeto** (comparabilidade entre times), não por imposição legal. `ATTRIBUTION.md` registra a mudança.
 
 ## Sistema de configuração BMAD
 
@@ -58,7 +58,7 @@ Saídas BMAD:
 
 `docs/ADR/0001-localization-strategy.md` define a política. Resumo operacional:
 
-- **EN inegociável:** identificadores de código (nomes de skill, slugs de agente, comandos `/bmad-bcp-*`), chaves YAML/frontmatter/JSON Schema, mensagens de Conventional Commits (apenas o type), nomes de branch, títulos de ADR. `CHANGELOG.md` tem estrutura EN (o `type` parseado) mas seções e conteúdo PT-BR. `ATTRIBUTION.md` é PT-BR canônico, exceto a frase de crédito canônica da CI&T (verbatim EN — crédito legal exigido pela CC BY-NC-ND).
+- **EN inegociável:** identificadores de código (nomes de skill, slugs de agente, comandos `/bmad-bcp-*`), chaves YAML/frontmatter/JSON Schema, mensagens de Conventional Commits (apenas o type), nomes de branch, títulos de ADR. `CHANGELOG.md` tem estrutura EN (o `type` parseado) mas seções e conteúdo PT-BR. `ATTRIBUTION.md` é PT-BR canônico; sob MIT a exigência legal é preservar o aviso de copyright e o texto da licença.
 - **PT-BR canônico:** `README.md` (raiz, manual real default), guias de integração, docs de tech-refinement, corpo de ADR, diálogo do agente Bruno, mensagens de erro/prompts, notas de auditoria `bcp.history`.
 - `README.en.md` = casca EN mínima (vitrine + link para o `README.md` PT-BR).
 - Comunicação com o usuário em **Português do Brasil**; `document_output_language` da config = English (afeta artefatos estruturados, não a narrativa).

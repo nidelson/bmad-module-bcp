@@ -41,7 +41,7 @@ persistent_facts = []
 #
 # Invariants:
 # - Hook runs AFTER the card is rendered.
-# - Hook MUST NOT modify `assets/bcp-rule.yaml` — the rule is CC BY-NC-ND
+# - Hook MUST NOT modify `assets/bcp-rule.yaml` — immutable by project decision
 #   (the immutability is load-bearing for license compliance).
 # - Error in hook is warn — the card was already displayed.
 #

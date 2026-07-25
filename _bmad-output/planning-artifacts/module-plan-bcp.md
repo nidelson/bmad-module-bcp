@@ -30,6 +30,11 @@ updated: '2026-05-16'
 
 # Module Plan — bmad-module-bcp
 
+> ⚠️ **Atualização de licença (2026-07-25).** Este artefato foi escrito quando o BCP circulava sob
+> **CC BY-NC-ND 4.0**. Em maio/2026 CI&T e Itaú republicaram o framework sob **MIT**
+> ([flow-ciandt/bcp-agent](https://github.com/flow-ciandt/bcp-agent)). As afirmações de licença abaixo
+> refletem o contexto da época — a postura vigente está em [ATTRIBUTION.md](../../ATTRIBUTION.md).
+
 > Política de localização: este documento segue o ADR 0001 — corpo em PT-BR
 > (trilha de decisão interna), identificadores de código sempre em EN.
 > Fonte de verdade do escopo: GitHub issue #1 de `nidelson/bmad-module-bcp`.

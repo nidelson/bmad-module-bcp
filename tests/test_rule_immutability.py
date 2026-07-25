@@ -1,15 +1,21 @@
-"""bcp-rule.yaml is CI&T's framework under CC BY-NC-ND 4.0.
+"""bcp-rule.yaml is CI&T's framework, released under MIT in May 2026.
 
-The NoDerivatives (ND) term forbids distributing a modified version of the
-rule. The license split is load-bearing: module code is MIT, this embedded
-rule is not. These tests are a structural tripwire — they fail CI if the
-canonical ruler is altered (only the editorial `hints` block, if present,
-is mutable and is deliberately not asserted here).
+Until then the framework circulated under CC BY-NC-ND 4.0, and the
+NoDerivatives term made this rule *legally* immutable. Since the
+republication (https://github.com/flow-ciandt/bcp-agent) module code and
+embedded rule share the same license, and immutability became a **project
+decision** instead of a legal constraint: a BCP score is only comparable
+across teams when the ruler is identical.
+
+These tests remain a structural tripwire — they fail CI if the canonical
+ruler is altered (only the editorial `hints` block, if present, is mutable
+and is deliberately not asserted here). What changed is the reason to keep
+them, not their value: an accidental edit or a bad merge still ships
+numbers that look like BCP and are not.
 
 This is a conformance guard, not a transcription audit: it pins the shape
 the deterministic engine and the contract depend on (10 elements, frozen
-slugs, the Fibonacci scale, the attribution block), so an accidental edit
-or a bad merge cannot ship a derivative.
+slugs, the Fibonacci scale, the attribution block).
 """
 from __future__ import annotations
 
@@ -26,19 +32,26 @@ ALWAYS_THERE = {
 FIB = {"XS": 1, "S": 2, "M": 3, "L": 5, "XL": 8}
 
 
-def test_license_block_is_cc_by_nc_nd(rule):
+def test_license_block_is_mit(rule):
     lic = rule["license"]
-    assert lic["spdx"] == "CC-BY-NC-ND-4.0"
+    assert lic["spdx"] == "MIT"
     assert lic["creator"] == "CI&T"
-    assert "ciandt.com" in lic["source"]
-    assert "NonCommercial-NoDerivatives" in lic["name"]
+    assert "flow-ciandt/bcp-agent" in lic["source"]
+    assert "MIT" in lic["name"]
     assert lic["attribution"].strip(), "attribution string must not be empty"
+
+
+def test_previous_license_is_recorded(rule):
+    """The CC BY-NC-ND provenance stays on record: installations scored
+    before May 2026 were produced under it, and the audit trail should not
+    silently lose that."""
+    assert rule["license"].get("previous_license") == "CC-BY-NC-ND-4.0"
 
 
 def test_fibonacci_scale_is_verbatim(rule):
     assert rule["sizes"] == FIB, (
         "the size→points scale is part of the canonical ruler — altering "
-        "it is a derivative work (ND violation) and breaks every score"
+        "it breaks comparability with every other installation"
     )
 
 

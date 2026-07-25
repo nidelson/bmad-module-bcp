@@ -16,6 +16,11 @@ translation_of: original-en-2026-05-07
 
 # Product Brief: bmad-module-bcp
 
+> ⚠️ **Atualização de licença (2026-07-25).** Este artefato foi escrito quando o BCP circulava sob
+> **CC BY-NC-ND 4.0**. Em maio/2026 CI&T e Itaú republicaram o framework sob **MIT**
+> ([flow-ciandt/bcp-agent](https://github.com/flow-ciandt/bcp-agent)). As afirmações de licença abaixo
+> refletem o contexto da época — a postura vigente está em [ATTRIBUTION.md](../../ATTRIBUTION.md).
+
 ## Sumário Executivo
 
 Se você é um squad CI&T-shaped reportando produtividade de IA para a liderança, hoje você não consegue defender o número. Suas estimativas vivem em **Business Complexity Points (BCP)** — o framework publicado pela CI&T de pontuação por 10 elementos × 5 tamanhos, nascido do "Re-Thinking Story Points" para entregar uma unidade de complexidade normalizada, objetiva e comparável entre times (segundo a CI&T, os cinco pilares do BCP são Communication, Normalized System, Comparisons, Best Practices e Quality). Já o módulo de telemetria do BMAD (PULSE) fala em horas, story points ou T-shirts. Ou você re-estima cada story duas vezes, ou maquia o número, ou abandona a telemetria.

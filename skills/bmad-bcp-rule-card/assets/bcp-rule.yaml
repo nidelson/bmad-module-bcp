@@ -2,33 +2,40 @@
 #  Business Complexity Points (BCP) — Canonical Rule
 # =============================================================================
 #  Business Complexity Points (BCP) is a software complexity normalization
-#  framework created by CI&T (www.ciandt.com), licensed under a Creative
-#  Commons Attribution-NonCommercial-NoDerivatives 4.0 International License
-#  (CC BY-NC-ND 4.0): https://creativecommons.org/licenses/by-nc-nd/4.0/
+#  framework created by CI&T (www.ciandt.com) in 2015, adopted by Itau
+#  Unibanco in 2018, and released as open source under the MIT License in
+#  May 2026: https://github.com/flow-ciandt/bcp-agent
 #
-#  Source: https://ciandt.com/us/en-us/complexitypoints
+#  Source: https://github.com/flow-ciandt/bcp-agent
+#  Institutional page: https://ciandt.com/us/en-us/complexitypoints
 #  Canonical ruler image: https://dmwnh9nwzeoaa.cloudfront.net/2020-12/bcp-ruler.png
 #
-#  IMMUTABLE — DO NOT EDIT the `elements`, `sizes`, `definition`, `descriptor`
-#  or `points` content below. The NoDerivatives (ND) term forbids
-#  distributing a modified version of the framework. Only the editorial
-#  `hints` block (clearly marked, NOT part of the CI&T rule) is mutable.
-#  The bmad-module-bcp code is MIT; this embedded rule is CC BY-NC-ND 4.0.
+#  DO NOT EDIT the `elements`, `sizes`, `definition`, `descriptor` or `points`
+#  content below. Under MIT this is no longer a legal constraint (it was, under
+#  the previous CC BY-NC-ND publication) — it is a design decision of this
+#  module: a BCP score is only comparable across teams when the ruler is the
+#  same. Diverging is allowed, but requires bumping `rule_version` and accepting
+#  that the resulting scores are not comparable with other installations.
+#  Only the editorial `hints` block (NOT part of the CI&T rule) is authored here.
+#  Both the bmad-module-bcp code and this embedded rule are MIT.
 # =============================================================================
 
 schema_version: "1.0"
 rule_version: "1.0"
 
 license:
-  name: "Creative Commons Attribution-NonCommercial-NoDerivatives 4.0 International"
-  spdx: "CC-BY-NC-ND-4.0"
-  url: "https://creativecommons.org/licenses/by-nc-nd/4.0/"
+  name: "MIT License"
+  spdx: "MIT"
+  url: "https://github.com/flow-ciandt/bcp-agent/blob/main/LICENSE"
   attribution: >-
     Business Complexity Points (BCP) is a software complexity normalization
-    framework created by CI&T (www.ciandt.com) licensed under a Creative
-    Commons Attribution-NonCommercial-NoDerivatives 4.0 International License.
+    framework created by CI&T (www.ciandt.com), released as open source under
+    the MIT License. Copyright (c) 2025 CI&T HyperX.
   creator: "CI&T"
-  source: "https://ciandt.com/us/en-us/complexitypoints"
+  source: "https://github.com/flow-ciandt/bcp-agent"
+  # Publicacao anterior (ate maio/2026): CC BY-NC-ND 4.0 via
+  # https://ciandt.com/us/en-us/complexitypoints — ver ATTRIBUTION.md
+  previous_license: "CC-BY-NC-ND-4.0"
 
 # Fibonacci point scale per size (verbatim from the canonical ruler header).
 sizes:

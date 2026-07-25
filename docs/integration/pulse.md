@@ -71,7 +71,7 @@ estimated_hours_basis: bcp
 estimated_hours_reference: 40        # âncora frozen = total × reference rate (issue #32)
 bcp:
   schema_version: "1.0"
-  rule_version: "ciandt-2014"
+  rule_version: "1.0"
   total: 8
   scored_at: "2026-05-17T12:00:00Z"
   scored_by: bruno

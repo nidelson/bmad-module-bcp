@@ -8,6 +8,11 @@ purpose: "Token-efficient context for downstream PRD creation"
 
 # Distillate — bmad-module-bcp v0.1.0
 
+> ⚠️ **Atualização de licença (2026-07-25).** Escrito quando o BCP circulava sob **CC BY-NC-ND 4.0**.
+> Em maio/2026 CI&T e Itaú republicaram o framework sob **MIT** ([flow-ciandt/bcp-agent](https://github.com/flow-ciandt/bcp-agent)).
+> Postura vigente em [ATTRIBUTION.md](../../ATTRIBUTION.md).
+
+
 ## Identity
 
 - BMAD module installable via `npx bmad-method install --custom-source https://github.com/nidelson/bmad-module-bcp`.

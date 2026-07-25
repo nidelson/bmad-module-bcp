@@ -30,5 +30,10 @@ classificationContext:
 
 # Product Requirements Document - bmad-module-bcp
 
+> ⚠️ **Atualização de licença (2026-07-25).** Este artefato foi escrito quando o BCP circulava sob
+> **CC BY-NC-ND 4.0**. Em maio/2026 CI&T e Itaú republicaram o framework sob **MIT**
+> ([flow-ciandt/bcp-agent](https://github.com/flow-ciandt/bcp-agent)). As afirmações de licença abaixo
+> refletem o contexto da época — a postura vigente está em [ATTRIBUTION.md](../../ATTRIBUTION.md).
+
 **Author:** Nidelson
 **Date:** 2026-05-08

@@ -9,7 +9,7 @@ description: >-
   (BCP) da CI&T, deriva estimated_hours do score, é dono do baseline por
   categoria e escreve de volta no frontmatter da story. Roda ao lado do módulo
   irmão PULSE com fronteira de ownership limpa.
-module_version: 0.1.7
+module_version: 0.1.8
 default_selected: false
 module_greeting: >
   BCP instalado com sucesso! Régua antes de régua.
@@ -58,7 +58,9 @@ bcp_estimation_basis:
   default: bcp
   result: '{value}'
 bcp_baseline_seed:
-  prompt: Seed de horas por BCP para cold start (valor de partida; a CI&T nao publica fator de conversao)?
+  prompt: >-
+    Seed de horas por BCP para cold start (valor de partida; a CI&T nao publica
+    fator de conversao)?
   default: '4.13'
   result: '{value}'
 bcp_baseline_min_samples:

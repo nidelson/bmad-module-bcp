@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.1.8](https://github.com/nidelson/bmad-module-bcp/compare/v0.1.7...v0.1.8) (2026-07-25)
+
+
+### Correções
+
+* **license:** BCP republicado sob MIT — atualiza atribuição e referências ([#43](https://github.com/nidelson/bmad-module-bcp/issues/43)) ([14b7de7](https://github.com/nidelson/bmad-module-bcp/commit/14b7de7f036e7782a2049d9c55ac4a7e1477a7f9))
+
 ## [0.1.7](https://github.com/nidelson/bmad-module-bcp/compare/v0.1.6...v0.1.7) (2026-07-19)
 
 

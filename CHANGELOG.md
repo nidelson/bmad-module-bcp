@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.1.9](https://github.com/nidelson/bmad-module-bcp/compare/v0.1.8...v0.1.9) (2026-07-29)
+
+
+### Correções
+
+* **setup:** stop register-party-agent from flattening local edits on re-run ([#45](https://github.com/nidelson/bmad-module-bcp/issues/45)) ([12cd397](https://github.com/nidelson/bmad-module-bcp/commit/12cd3976fada75357c581a10617aab644132d704))
+
 ## [0.1.8](https://github.com/nidelson/bmad-module-bcp/compare/v0.1.7...v0.1.8) (2026-07-25)
 
 

@@ -11,8 +11,15 @@ _bmad/custom/config.toml (team). Os módulos OFICIAIS têm suas entradas [agents
 escritas no config.toml base pelo installer do BMAD core; um módulo CUSTOM (como
 o BCP) não é escrito ali, então seu agente nunca aparece no Party Mode. Este
 script grava a entrada na camada custom (team, committed), que sobrevive a
-re-install. Idempotente / anti-zombie: reescreve a própria entrada a cada run e
-preserva comentários e demais seções (tomlkit round-trip).
+re-install. Idempotente: preserva comentários e demais seções (tomlkit
+round-trip).
+
+O `custom/config.toml` é um arquivo human-authored — o time comenta e edita as
+entradas ali. Por isso um re-run NÃO reescreve o bloco inteiro: a entrada é
+atualizada in-place (mantendo sua posição e os comentários que a precedem) e só
+os campos estruturais (STRUCTURAL_FIELDS) são regravados. Campos editoriais já
+presentes (name/title/icon/description) são preservados — use `--force` para
+restaurá-los a partir do fragment.
 
 Deriva tudo do agent-manifest-fragment.csv (primeira linha de dados): a chave da
 tabela vem do diretório do SKILL apontado em `path`; nome/título/ícone/descrição
@@ -31,6 +38,11 @@ except ModuleNotFoundError:
     sys.exit(2)
 
 DEFAULT_TEAM = "software-development"
+
+# Campos que o fragment é dono: identificam o registro e podem ser regravados a
+# cada run sem perda. Os demais (name/title/icon/description) são editoriais —
+# o time os ajusta direto no config.toml, e um re-run não deve achatá-los.
+STRUCTURAL_FIELDS = ("module", "team")
 
 
 def load_fragment(fragment_path: Path) -> dict | None:
@@ -65,6 +77,12 @@ def main() -> None:
     ap = argparse.ArgumentParser(description="Register the module agent in _bmad/custom/config.toml [agents].")
     ap.add_argument("--project-root", required=True, help="Consumer project root")
     ap.add_argument("--fragment", required=True, help="Path to agent-manifest-fragment.csv")
+    ap.add_argument(
+        "--force",
+        action="store_true",
+        help="Também sobrescreve os campos editoriais (name/title/icon/description) "
+             "com os valores do fragment. Sem a flag, campos já presentes são preservados.",
+    )
     args = ap.parse_args()
 
     root = Path(args.project_root)
@@ -93,17 +111,34 @@ def main() -> None:
     if agents is None:
         agents = tomlkit.table(is_super_table=True)
         doc["agents"] = agents
-    if key in agents:
-        del agents[key]
 
-    tbl = tomlkit.table()
-    for k, v in entry.items():
-        tbl[k] = v
-    agents[key] = tbl
+    existing = agents.get(key)
+    if existing is None:
+        tbl = tomlkit.table()
+        for k, v in entry.items():
+            tbl[k] = v
+        agents[key] = tbl
+        action = "created"
+        written = dict(entry)
+    else:
+        # Atualiza in-place. Recriar a entrada (del + reatribuição) a moveria
+        # para o fim de [agents], desgarrando os comentários que a precedem no
+        # arquivo do time.
+        for k, v in entry.items():
+            if args.force or k in STRUCTURAL_FIELDS or k not in existing:
+                existing[k] = v
+        action = "forced" if args.force else "updated"
+        written = {k: existing[k] for k in entry}
 
     custom.write_text(tomlkit.dumps(doc), encoding="utf-8")
     print(json.dumps(
-        {"status": "success", "agent_key": key, "custom_config_path": str(custom), "entry": entry},
+        {
+            "status": "success",
+            "action": action,
+            "agent_key": key,
+            "custom_config_path": str(custom),
+            "entry": written,
+        },
         ensure_ascii=False,
     ))
 

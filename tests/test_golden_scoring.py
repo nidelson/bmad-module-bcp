@@ -113,3 +113,62 @@ def test_calibrated_category_uses_rolling_mean_not_seed(
     assert out["total"] == 5
     assert out["estimated_hours"] == 30.0  # 5 × 6.0, not 5 × 4.13
     assert out["hours_per_bcp_source"] == "baseline:backend"
+
+
+def test_provisional_category_uses_its_rate_not_seed(
+    tmp_path, story_file, breakdown_file
+):
+    """A provisional rate (`is_seed: true`, below min_samples) still beats the
+    seed. The gate used to withhold it, which fell back to a market rate as if
+    it were a delivery forecast -- a unit error ~80x wide, traded for a ~20%
+    sampling error. The source string keeps the two distinguishable."""
+    baseline = tmp_path / "bcp-baseline.yaml"
+    baseline.write_text(yaml.dump({
+        "schema_version": "1.0",
+        "config_snapshot": {"seed": 4.13, "min_samples": 5,
+                            "rolling_window": 10},
+        "categories": {
+            "frontend": {"h_per_bcp": 0.0598, "n_samples": 3, "is_seed": True},
+        },
+    }))
+    story = story_file({"story_id": "k", "category": "frontend",
+                        "estimated_hours": 5})
+    bd = breakdown_file({"business_rules": [{"size": "L", "points": 5}]})
+    proc = run_script(
+        APPLY_SCORE, "--story", str(story), "--breakdown", str(bd),
+        "--baseline", str(baseline), *RULE_ARG,
+        "--scored-by", "manual", "--now", "2026-05-17T12:00:00Z",
+    )
+    assert proc.returncode == 0, proc.stderr
+    out = json.loads(proc.stdout)
+    assert out["estimated_hours"] == 0.3  # 5 × 0.0598, not 5 × 4.13 = 20.65
+    assert out["hours_per_bcp_source"] == "baseline:frontend:provisional"
+
+
+def test_category_without_any_rate_falls_back_to_seed(
+    tmp_path, story_file, breakdown_file
+):
+    """No samples at all is genuine cold start. Measured rates diverge up to 2x
+    between categories, so there is no valid cross-category proxy -- the seed
+    is the only answer available."""
+    baseline = tmp_path / "bcp-baseline.yaml"
+    baseline.write_text(yaml.dump({
+        "schema_version": "1.0",
+        "config_snapshot": {"seed": 4.13, "min_samples": 5,
+                            "rolling_window": 10},
+        "categories": {
+            "backend": {"h_per_bcp": 6.0, "n_samples": 7, "is_seed": False},
+        },
+    }))
+    story = story_file({"story_id": "k", "category": "mobile",
+                        "estimated_hours": 5})
+    bd = breakdown_file({"business_rules": [{"size": "L", "points": 5}]})
+    proc = run_script(
+        APPLY_SCORE, "--story", str(story), "--breakdown", str(bd),
+        "--baseline", str(baseline), *RULE_ARG,
+        "--scored-by", "manual", "--now", "2026-05-17T12:00:00Z",
+    )
+    assert proc.returncode == 0, proc.stderr
+    out = json.loads(proc.stdout)
+    assert out["estimated_hours"] == round(5 * SEED, 2)
+    assert out["hours_per_bcp_source"] == "seed"  # not baseline:backend

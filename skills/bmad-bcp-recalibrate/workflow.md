@@ -2,7 +2,7 @@
 
 ## Overview
 
-Atualiza o `bcp-baseline.yaml` por categoria a partir de **horas reais**: cada amostra `(categoria, bcp_total, actual_hours)` produz um `h_per_bcp` observado (`actual_hours / bcp_total`); o baseline guarda uma janela FIFO por categoria e o `h_per_bcp` vira a média da janela. Uma categoria **sai do seed** (`is_seed: false`) ao acumular `min_samples` amostras — só então o `bmad-bcp-score` passa a derivar horas pelo fator do time em vez do seed 4.13.
+Atualiza o `bcp-baseline.yaml` por categoria a partir de **horas reais**: cada amostra `(categoria, bcp_total, actual_hours)` produz um `h_per_bcp` observado (`actual_hours / bcp_total`); o baseline guarda uma janela FIFO por categoria e o `h_per_bcp` vira a média da janela. O `bmad-bcp-score` deriva horas por esse fator **desde a primeira amostra**; ao acumular `min_samples` a categoria **sai do seed** (`is_seed: false`) e o fator deixa de ser marcado como provisório. O seed 4.13 só vale para categoria sem amostra alguma.
 
 **Não-negociável — funciona sem PULSE:** a fonte de `actual_hours` é agnóstica. Lê `pulse_metrics.actual_hours` da story **se existir** (convenção de arquivo, zero cross-awareness) **ou** aceita `--actual-hours` manual. O script nunca importa, exige ou checa PULSE — `actual_hours` é só um número.
 
@@ -70,7 +70,7 @@ Customizar override (team-level, committed): edite `{project-root}/_bmad/custom/
 ## Design Notes
 
 - **Sem PULSE acoplado:** `actual_hours` é lido como chave de frontmatter por convenção; ausência sem PULSE é esperada e tratada (cai no `--actual-hours`). BCP nunca escreve `pulse_metrics`.
-- **Cold-start protegido:** enquanto `n_samples < min_samples` a categoria fica `is_seed: true` e o `bmad-bcp-score` ignora o `h_per_bcp` calculado (usa o seed) — evita confiar em média de poucas amostras.
+- **Cold-start protegido:** enquanto `n_samples < min_samples` a categoria fica `is_seed: true`. O `bmad-bcp-score` **usa** esse `h_per_bcp` mesmo assim, marcando a fonte como `baseline:<cat>:provisional`. Só categoria **sem amostra alguma** cai no seed. Até 2026-07-31 o provisório era descartado — mas o fallback é o seed, que é cotação de **mercado**, não previsão da nossa entrega: trocava um erro amostral de ~20% por um erro de unidade de ~80×. Reter medição só é conservador quando o fallback mede a mesma coisa.
 - **Idempotência:** dedup por `id` (story_id/scored_at) em `samples` e `history.last_id`. `bmad-bcp-backfill-baseline` (Fase 2) encadeia `score-batch` + esta skill contando com isso.
 - `history` por categoria mantém snapshot por execução (cap 50, FIFO) — trilha de auditoria da evolução do fator.
 - Janela FIFO = `config_snapshot.rolling_window`; `min_samples` e `seed` também do snapshot (gravados pelo `bmad-bcp-setup`).

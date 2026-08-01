@@ -35,6 +35,8 @@ def test_canonical_scored_frontmatter_validates(schema):
         "estimated_hours": 33.04,
         "estimated_hours_pre_bcp": 10,
         "estimated_hours_basis": "bcp",
+        "hours_per_bcp": 4.13,
+        "hours_per_bcp_source": "seed",
         "bcp": {
             "schema_version": "1.0",
             "rule_version": "1.0",
@@ -54,6 +56,46 @@ def test_canonical_scored_frontmatter_validates(schema):
     _validator(schema).validate(fm)
 
 
+@pytest.mark.parametrize("source", [
+    "seed",                          # cold start: category has no samples
+    "baseline:backend",              # calibrated
+    "baseline:frontend:provisional",  # measured, still under min_samples
+    "baseline:mcp-data",             # hyphens are legal in category names
+])
+def test_schema_accepts_every_real_source_form(schema, source):
+    """The three states a factor can come from, plus a hyphenated category.
+
+    A reader that branches on this string needs the full set pinned: the
+    pattern is the only thing telling `baseline:x:provisional` apart from a
+    typo, and a category name with a hyphen must not read as malformed.
+    """
+    fm = {
+        "estimated_hours": 12, "estimated_hours_basis": "bcp",
+        "hours_per_bcp": 0.0598, "hours_per_bcp_source": source,
+        "bcp": {
+            "schema_version": "1.0", "rule_version": "1.0", "total": 3,
+            "scored_at": "2026-05-17T12:00:00Z", "scored_by": "manual",
+            "breakdown": {"business_rules": [{"size": "M", "points": 3}]},
+        },
+    }
+    _validator(schema).validate(fm)
+
+
+def test_schema_still_validates_without_the_new_fields(schema):
+    """Additive, not required: stories scored before this contract version have
+    neither field, and must keep validating. A reader upgrades by treating
+    absence as `unknown`, not by demanding a backfill."""
+    fm = {
+        "estimated_hours": 12, "estimated_hours_basis": "bcp",
+        "bcp": {
+            "schema_version": "1.0", "rule_version": "1.0", "total": 3,
+            "scored_at": "2026-05-17T12:00:00Z", "scored_by": "manual",
+            "breakdown": {"business_rules": [{"size": "M", "points": 3}]},
+        },
+    }
+    _validator(schema).validate(fm)
+
+
 @pytest.mark.parametrize("mutate,reason", [
     (lambda fm: fm["bcp"].pop("total"), "missing required bcp.total"),
     (lambda fm: fm["bcp"]["breakdown"]["business_rules"][0].update(
@@ -66,6 +108,14 @@ def test_canonical_scored_frontmatter_validates(schema):
      "scored_by outside the allowed enum"),
     (lambda fm: fm.update({"estimated_hours": -1}),
      "negative estimated_hours"),
+    (lambda fm: fm.update({"hours_per_bcp_source": "baseline"}),
+     "source naming no category"),
+    (lambda fm: fm.update({"hours_per_bcp_source": "guess"}),
+     "source outside {seed, baseline:*}"),
+    (lambda fm: fm.update({"hours_per_bcp_source": "baseline:backend:draft"}),
+     "qualifier other than :provisional"),
+    (lambda fm: fm.update({"hours_per_bcp": 0}),
+     "zero factor — every story would plan at 0h"),
 ])
 def test_schema_rejects_contract_violations(schema, mutate, reason):
     fm = {

@@ -7,9 +7,10 @@ Pontua **uma** story pelo framework Business Complexity Points e deriva `estimat
 Divisão de responsabilidade: o **LLM faz o julgamento** (escolher tamanho por elemento via régua); o **script `scripts/apply_score.py` faz o determinístico** (total, derivação de horas, preservação de auditoria, history, advisory de delta, validação de invariantes, escrita idempotente).
 
 **Não-negociáveis:**
+
 - **Non-interactive por padrão** acima do threshold de confiança. Dry-run review **apenas** em: divergência material com a estimativa da Amelia, baixa confiança, ou rescore.
 - **Nunca** escreve `pulse_metrics` (PULSE é dono). Toda chave não-BCP do frontmatter é preservada verbatim.
-- Auditoria: `estimated_hours_pre_bcp` gravado **uma única vez** (original da Amelia); `estimated_hours_basis: bcp`.
+- Auditoria: `estimated_hours_pre_bcp` gravado **uma única vez** (original da Amelia); `estimated_hours_basis: bcp`; `hours_per_bcp` + `hours_per_bcp_source` registram o fator aplicado e sua procedência, para que `estimated_hours = bcp.total × hours_per_bcp` seja conferível sem consultar a baseline (que é mutável).
 
 ## Conventions
 
@@ -85,5 +86,5 @@ Customizar override (team-level, committed): edite `{project-root}/_bmad/custom/
 - O script preserva o corpo da story verbatim; só re-serializa o mapa de frontmatter (chaves não-BCP mantidas, ordem preservada).
 - Idempotência: re-rodar o mesmo breakdown sem `--rescore` não re-sobrescreve `estimated_hours_pre_bcp` nem polui `history`.
 - `bcp-frontmatter.schema.yaml` (em `assets/`) documenta o contrato; o script valida os invariantes em código (sem dependência extra de jsonschema).
-- **Três números h/BCP (issue #32):** *seed* (cold-start) e *recalibrado* (fator vivo por categoria) derivam o **plano** (`estimated_hours`) → previsibilidade. A *reference rate* frozen (`bcp_reference_h_per_bcp`) deriva a **âncora** (`estimated_hours_reference`) → alavancagem estável que não colapsa. O script é dono de toda conversão BCP→horas (single-writer); o PULSE só **lê** os campos. A reference rate muda só por **governança** (config durável + ledger, forward-only) — `recalibrate` nunca a toca. Procedimento completo no README.
+- **Três números h/BCP (issue #32):** _seed_ (cold-start) e _recalibrado_ (fator vivo por categoria) derivam o **plano** (`estimated_hours`) → previsibilidade. A _reference rate_ frozen (`bcp_reference_h_per_bcp`) deriva a **âncora** (`estimated_hours_reference`) → alavancagem estável que não colapsa. O script é dono de toda conversão BCP→horas (single-writer); o PULSE só **lê** os campos. A reference rate muda só por **governança** (config durável + ledger, forward-only) — `recalibrate` nunca a toca. Procedimento completo no README.
 - **Customization surface:** `customize.toml` segue o padrão BMad — três camadas (skill defaults < team `<project>/_bmad/custom/*.toml` < user `*.user.toml`) resolvidas por `_bmad/scripts/resolve_customization.py`. `on_complete` é o extension point para encadear ações pós-persistência sem fork da skill.

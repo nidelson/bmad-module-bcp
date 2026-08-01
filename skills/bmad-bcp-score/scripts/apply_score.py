@@ -331,6 +331,15 @@ def main() -> int:
 
     fm["estimated_hours"] = estimated_hours
     fm["estimated_hours_basis"] = "bcp"
+    # The factor and where it came from. Until now both were computed here and
+    # only ever surfaced in the JSON result, so anything reading the story back
+    # had to reverse-engineer them: divide estimated_hours by bcp.total and
+    # match against the known rates. That inference breaks whenever two
+    # candidates sit close together -- and the seed CAN sit close to a measured
+    # rate, since both estimate the same quantity. The producer knows the
+    # answer; withholding it forced every consumer to guess.
+    fm["hours_per_bcp"] = hpb
+    fm["hours_per_bcp_source"] = hpb_source
     fm["estimated_hours_reference"] = estimated_hours_reference
 
     bcp_block: dict = {

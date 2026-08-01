@@ -166,9 +166,18 @@ Mesmas três camadas de override que o resto da config (skill defaults < team < 
 
 BCP e PULSE são frouxamente acoplados, **mediados por schema** — nenhum importa o outro. BCP escreve o bloco `bcp.*` e o `estimated_hours`; PULSE lê `estimated_hours` de forma agnóstica ao escritor e mede eficiência de IA. Nenhum ajuste no PULSE é necessário.
 
-- BCP **escreve:** `estimated_hours`, `estimated_hours_pre_bcp`, `estimated_hours_basis`, `estimated_hours_reference`, `bcp.*`, `bcp.history`.
+- BCP **escreve:** `estimated_hours`, `estimated_hours_pre_bcp`, `estimated_hours_basis`, `estimated_hours_reference`, `hours_per_bcp`, `hours_per_bcp_source`, `bcp.*`, `bcp.history`.
 - BCP **nunca escreve:** `pulse_metrics`.
 - PULSE **lê** `estimated_hours` (plano → previsibilidade) e `estimated_hours_reference` (âncora frozen → alavancagem estável). Sem o campo de referência, cai na alavancagem-vs-plano.
+
+### `hours_per_bcp` e `hours_per_bcp_source`
+
+O fator aplicado e de onde ele veio: `seed`, `baseline:<cat>` ou `baseline:<cat>:provisional`. Ambos aditivos e opcionais — story pontuada antes desta versão não os tem, e o leitor trata a ausência como desconhecido.
+
+Existem porque **isso não é inferível da aritmética**. Dividir `estimated_hours` por `bcp.total` e comparar com os rates conhecidos falha assim que dois deles ficam próximos — e o seed _pode_ ficar próximo de um rate medido, já que ambos estimam a mesma grandeza. Um consumidor que precise saber se um plano ainda depende do cold start estava adivinhando por proximidade numérica.
+
+Gravar o fator também torna a derivação auditável sozinha: `estimated_hours = bcp.total × hours_per_bcp`, sem consultar a baseline — que é mutável e já terá mudado quando alguém for conferir uma story antiga.
+
 - Se o PULSE estiver ausente, o BCP funciona sozinho. Se o BCP estiver ausente, o PULSE usa a estimativa da Amelia.
 
 Contrato completo: [docs/integration/pulse.md](docs/integration/pulse.md). Hook no fluxo de criação de story: [docs/integration/bmad-create-story.md](docs/integration/bmad-create-story.md).

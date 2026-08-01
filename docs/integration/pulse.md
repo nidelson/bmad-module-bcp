@@ -24,21 +24,23 @@ integração funcionar.
 
 ### Frontmatter da story (dados de especificação)
 
-| Chave | BCP | PULSE |
-| --- | --- | --- |
-| `estimated_hours` | **escreve** (sobrescreve, consentimento via install) | lê (plano → previsibilidade) |
-| `estimated_hours_pre_bcp` | **escreve uma única vez** (auditoria) | — |
-| `estimated_hours_basis` | **escreve** (`bcp`) | lê (opcional) |
-| `estimated_hours_reference` | **escreve** (âncora frozen, issue #32) | lê (âncora → alavancagem estável) |
-| `bcp.total`, `bcp.breakdown`, `bcp.scored_by` | **escreve** | lê (opcional) |
-| `pulse_metrics` | **nunca toca** | escreve |
+| Chave                                         | BCP                                                                      | PULSE                             |
+| --------------------------------------------- | ------------------------------------------------------------------------ | --------------------------------- |
+| `estimated_hours`                             | **escreve** (sobrescreve, consentimento via install)                     | lê (plano → previsibilidade)      |
+| `estimated_hours_pre_bcp`                     | **escreve uma única vez** (auditoria)                                    | —                                 |
+| `estimated_hours_basis`                       | **escreve** (`bcp`)                                                      | lê (opcional)                     |
+| `estimated_hours_reference`                   | **escreve** (âncora frozen, issue #32)                                   | lê (âncora → alavancagem estável) |
+| `hours_per_bcp`                               | **escreve** (fator aplicado)                                             | lê (opcional)                     |
+| `hours_per_bcp_source`                        | **escreve** (`seed` \| `baseline:<cat>` \| `baseline:<cat>:provisional`) | lê (opcional — qualifica o plano) |
+| `bcp.total`, `bcp.breakdown`, `bcp.scored_by` | **escreve**                                                              | lê (opcional)                     |
+| `pulse_metrics`                               | **nunca toca**                                                           | escreve                           |
 
 ### sprint-status.yaml (dados operacionais)
 
-| Chave | BCP | PULSE |
-| --- | --- | --- |
-| `bcp_metrics[story_key].history` | **escreve** (histórico de rescores, FIFO cap 50) | — |
-| `pulse_metrics[story_key].*` | **nunca toca** | escreve |
+| Chave                            | BCP                                              | PULSE   |
+| -------------------------------- | ------------------------------------------------ | ------- |
+| `bcp_metrics[story_key].history` | **escreve** (histórico de rescores, FIFO cap 50) | —       |
+| `pulse_metrics[story_key].*`     | **nunca toca**                                   | escreve |
 
 Regra dura: **BCP nunca escreve `pulse_metrics`; PULSE nunca escreve `bcp.*` nem `bcp_metrics`.**
 As trilhas de dados são disjuntas e cada módulo é dono exclusivo da sua.
@@ -50,11 +52,11 @@ estimativa no momento de criação, imutáveis após o score inicial. O
 sprint-status contém **dados operacionais** — o que mudou ao longo da vida da
 story (rescores, histórico de revisões).
 
-| Dado | Natureza | Onde vive |
-| --- | --- | --- |
-| `bcp.total`, `bcp.breakdown` | Especificação — complexidade estrutural | story frontmatter |
-| `estimated_hours` | Planejamento — derivado do BCP | story frontmatter |
-| `bcp_metrics[key].history` | Operacional — histórico de rescores | sprint-status.yaml |
+| Dado                         | Natureza                                | Onde vive          |
+| ---------------------------- | --------------------------------------- | ------------------ |
+| `bcp.total`, `bcp.breakdown` | Especificação — complexidade estrutural | story frontmatter  |
+| `estimated_hours`            | Planejamento — derivado do BCP          | story frontmatter  |
+| `bcp_metrics[key].history`   | Operacional — histórico de rescores     | sprint-status.yaml |
 
 ## Contrato de frontmatter
 
@@ -65,10 +67,12 @@ Schema formal (JSON Schema Draft 2020-12):
 Exemplo do que o BCP grava numa story:
 
 ```yaml
-estimated_hours: 33
+estimated_hours: 33.04
 estimated_hours_pre_bcp: 10
 estimated_hours_basis: bcp
-estimated_hours_reference: 40        # âncora frozen = total × reference rate (issue #32)
+estimated_hours_reference: 40 # âncora frozen = total × reference rate (5.0, governada)
+hours_per_bcp: 4.13 # fator do PLANO: 8 × 4.13 = 33.04 (seed default do módulo)
+hours_per_bcp_source: seed # seed | baseline:<cat> | baseline:<cat>:provisional
 bcp:
   schema_version: "1.0"
   rule_version: "1.0"
@@ -95,10 +99,16 @@ trilha de auditoria, não é reescrito em rescores.
 
 O BCP grava **dois** números de horas, com papéis ortogonais:
 
-| Campo | Fórmula | Denominador | PULSE usa para |
-| --- | --- | --- | --- |
-| `estimated_hours` | `total × h_per_bcp` (recalibrado/vivo) | segue a realidade do time | **previsibilidade** (drift `actual` vs plano) |
+| Campo                       | Fórmula                                | Denominador               | PULSE usa para                                              |
+| --------------------------- | -------------------------------------- | ------------------------- | ----------------------------------------------------------- |
+| `estimated_hours`           | `total × h_per_bcp` (recalibrado/vivo) | segue a realidade do time | **previsibilidade** (drift `actual` vs plano)               |
 | `estimated_hours_reference` | `total × reference_h_per_bcp` (frozen) | benchmark fixo, governado | **alavancagem estável** (`reference / actual`, não colapsa) |
+
+`hours_per_bcp_source` qualifica o primeiro. Previsibilidade medida contra um
+plano derivado do `seed` compara o real com um chute de cold start, não com uma
+estimativa — o número sai, mas não significa o mesmo que os demais. Um leitor
+que agregue previsibilidade entre stories deveria segregar (ou excluir) as de
+fonte `seed`; até esta versão ele não tinha como saber quais eram.
 
 PULSE só **lê** os dois — não importa o BCP, não lê o baseline, não converte
 BCP→horas. **Degradação graciosa:** sem `estimated_hours_reference` (BCP antigo
@@ -146,13 +156,13 @@ funciona como override para paths não-padrão.
 
 ## Degradação graciosa
 
-| Cenário | Comportamento |
-| --- | --- |
-| BCP presente, PULSE ausente | BCP estima normalmente; `bcp_metrics` no sprint-status (se existir) fica sem `actual_hours` correspondente. |
-| PULSE presente, BCP ausente | PULSE usa o `estimated_hours` da Amelia. Zero erro. |
-| Ambos presentes | BCP estima → PULSE mede → auto-recalibrate no code review. Caminho feliz. |
-| BCP presente, consentimento negado | BCP só anexa `bcp.*`; `estimated_hours` fica como a Amelia deixou. PULSE mede contra a Amelia. |
-| `--project-root` sem sprint-status | Modo legado: history no frontmatter da story, advisory de deprecação. |
+| Cenário                            | Comportamento                                                                                               |
+| ---------------------------------- | ----------------------------------------------------------------------------------------------------------- |
+| BCP presente, PULSE ausente        | BCP estima normalmente; `bcp_metrics` no sprint-status (se existir) fica sem `actual_hours` correspondente. |
+| PULSE presente, BCP ausente        | PULSE usa o `estimated_hours` da Amelia. Zero erro.                                                         |
+| Ambos presentes                    | BCP estima → PULSE mede → auto-recalibrate no code review. Caminho feliz.                                   |
+| BCP presente, consentimento negado | BCP só anexa `bcp.*`; `estimated_hours` fica como a Amelia deixou. PULSE mede contra a Amelia.              |
+| `--project-root` sem sprint-status | Modo legado: history no frontmatter da story, advisory de deprecação.                                       |
 
 Nenhuma combinação quebra. A ausência de um módulo nunca é erro para o outro.
 

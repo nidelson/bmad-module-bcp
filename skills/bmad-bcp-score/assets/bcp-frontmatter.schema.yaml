@@ -29,6 +29,27 @@ properties:
       Default = seed quando a reference rate não está configurada; muda só por
       governança da reference rate, NUNCA pela recalibração. Campo opcional e
       aditivo: leitores antigos toleram a ausência (degradação graciosa).
+  hours_per_bcp:
+    type: number
+    exclusiveMinimum: 0
+    description: >-
+      Fator aplicado: estimated_hours = bcp.total × hours_per_bcp. Gravado para
+      que a derivação seja auditável sem consultar a baseline — que é mutável e
+      já terá mudado quando alguém for conferir uma story antiga.
+  hours_per_bcp_source:
+    type: string
+    pattern: "^(seed|baseline:[a-z0-9_-]+(:provisional)?)$"
+    description: >-
+      De onde veio o fator: `seed` (cold start, categoria sem medição alguma),
+      `baseline:<cat>` (rate calibrado) ou `baseline:<cat>:provisional` (medido,
+      ainda abaixo de min_samples).
+
+      Existe porque o consumidor não consegue inferir isso da aritmética. Dividir
+      estimated_hours por bcp.total e comparar com os rates conhecidos falha
+      sempre que dois deles ficam próximos — e o seed PODE ficar próximo de um
+      rate medido, já que ambos estimam a mesma grandeza. Inferência por
+      proximidade numérica é frágil por construção; o produtor sabe a resposta e
+      agora a grava.
   bcp:
     type: object
     required: [schema_version, rule_version, total, scored_at, scored_by, breakdown]

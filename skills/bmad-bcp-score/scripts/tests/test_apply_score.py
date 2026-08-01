@@ -79,8 +79,43 @@ def test_score_and_derive_seed(tmp_path: Path):
     fm, _, _ = _split(story.read_text())
     assert fm["estimated_hours_pre_bcp"] == 80          # original captured
     assert fm["estimated_hours_basis"] == "bcp"
+    # The factor reaches the FILE, not just the JSON. Before this, a reader
+    # holding only the story had to divide and guess which rate produced it.
+    assert fm["hours_per_bcp"] == 4.13
+    assert fm["hours_per_bcp_source"] == "seed"
     assert fm["bcp"]["total"] == 9
     assert fm["bcp"]["scored_at"] == "2026-05-17T00:00:00Z"
+
+
+def test_written_factor_reproduces_the_written_hours(tmp_path: Path):
+    """`estimated_hours == bcp.total × hours_per_bcp`, checkable from the story
+    alone. This is the point of writing the factor: the baseline is mutable and
+    will have moved on by the time anyone audits an old story."""
+    story = _story(tmp_path, {"category": "backend", "estimated_hours": 10})
+    bd = _bd(tmp_path, {"business_rules": [{"size": "L", "points": 5}]})
+    base = _baseline(tmp_path, {"backend": {"h_per_bcp": 0.0691, "is_seed": False}})
+    r = run("--story", str(story), "--breakdown", str(bd), "--baseline",
+            str(base), "--rule", str(_rule(tmp_path)),
+            "--scored-by", "manual", "--now", "2026-05-17T00:00:00Z")
+    assert r.returncode == 0, r.stdout + r.stderr
+    fm, _, _ = _split(story.read_text())
+    assert fm["hours_per_bcp_source"] == "baseline:backend"
+    assert fm["estimated_hours"] == round(fm["bcp"]["total"] * fm["hours_per_bcp"], 2)
+
+
+def test_provisional_source_is_marked_in_the_file(tmp_path: Path):
+    """A provisional factor is used, and says so. Same number either way, so
+    the string is the only thing a reader can branch on."""
+    story = _story(tmp_path, {"category": "frontend", "estimated_hours": 10})
+    bd = _bd(tmp_path, {"business_rules": [{"size": "L", "points": 5}]})
+    base = _baseline(tmp_path, {"frontend": {"h_per_bcp": 0.0598, "is_seed": True}})
+    r = run("--story", str(story), "--breakdown", str(bd), "--baseline",
+            str(base), "--rule", str(_rule(tmp_path)),
+            "--scored-by", "manual", "--now", "2026-05-17T00:00:00Z")
+    assert r.returncode == 0, r.stdout + r.stderr
+    fm, _, _ = _split(story.read_text())
+    assert fm["hours_per_bcp"] == 0.0598
+    assert fm["hours_per_bcp_source"] == "baseline:frontend:provisional"
 
 
 def test_baseline_category_overrides_seed(tmp_path: Path):

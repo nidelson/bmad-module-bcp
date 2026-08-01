@@ -14,7 +14,7 @@ Repositório irmão (acesso de leitura concedido em `settings.local.json`): `/Us
 
 Dois módulos BMAD frouxamente acoplados, **integração schema-mediated**: nenhum importa o outro, ambos degradam graciosamente quando o outro está ausente. O contrato é um bloco de frontmatter documentado no arquivo da story:
 
-- **BCP escreve:** `estimated_hours` (sobrescreve, preservando `estimated_hours_pre_bcp`), `estimated_hours_basis`, bloco `bcp.*`, `bcp.history` (trilha de auditoria, cap 50).
+- **BCP escreve:** `estimated_hours` (sobrescreve, preservando `estimated_hours_pre_bcp`), `estimated_hours_basis`, `hours_per_bcp` + `hours_per_bcp_source` (o fator e sua procedência — `seed` | `baseline:<cat>` | `baseline:<cat>:provisional`), bloco `bcp.*`, `bcp.history` (trilha de auditoria, cap 50).
 - **PULSE lê:** `estimated_hours` de forma agnóstica ao escritor; renderiza seção condicional quando `pulse_estimation_method=bcp`.
 
 Entregáveis v0.1.0: 8 skills (`bmad-bcp-setup`, `-score`, `-score-batch`, `-rescore`, `-recalibrate`, `-backfill-baseline`, `-rule-card`, `-agent-bruno`), persona Bruno, `bcp-rule.yaml` imutável por decisão de projeto, baseline por categoria `bcp-baseline.yaml` (seed 4.13, `min_samples=5`, `rolling_window=10`).
@@ -49,6 +49,7 @@ Skills BMAD vivem em `.claude/skills/` (instaladas via installer 6.6.0; módulos
 Fluxo para construir o módulo: BMad Builder (`bmad-module-builder`: ideate → create → validate; `bmad-agent-builder`; `bmad-workflow-builder`). Saída do builder vai para `skills/` (config `[modules.bmb]`).
 
 Saídas BMAD:
+
 - Artefatos de planejamento → `_bmad-output/planning-artifacts/`
 - Artefatos de implementação → `_bmad-output/implementation-artifacts/`
 - Artefatos de teste → `_bmad-output/test-artifacts/`

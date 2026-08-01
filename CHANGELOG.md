@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.1.10](https://github.com/nidelson/bmad-module-bcp/compare/v0.1.9...v0.1.10) (2026-08-01)
+
+
+### Correções
+
+* **score:** use a provisional category rate instead of falling back to the seed ([#47](https://github.com/nidelson/bmad-module-bcp/issues/47)) ([0f12532](https://github.com/nidelson/bmad-module-bcp/commit/0f125327362f13f47cabcfc70adbe5b253d253d8))
+
 ## [0.1.9](https://github.com/nidelson/bmad-module-bcp/compare/v0.1.8...v0.1.9) (2026-07-29)
 
 

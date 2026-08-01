@@ -81,15 +81,35 @@ def render(fm: dict, body: str, nl: str) -> str:
 
 
 def h_per_bcp(baseline: dict, category: str | None) -> tuple[float, str]:
-    """Return (hours_per_bcp, source). Uses the category rolling mean when
-    the category has left the seed; otherwise the cold-start seed."""
+    """Return (hours_per_bcp, source). Any measured category rate wins over the
+    cold-start seed -- including a provisional one (`is_seed: true`, fewer than
+    `min_samples` observations).
+
+    The `is_seed` gate used to withhold provisional rates, on the theory that a
+    handful of samples is not trustworthy. But look at what it falls back to:
+    the seed is a MARKET rate -- what an outside team would bill -- while this
+    field is a forecast of *our* delivery. Substituting one for the other is
+    not caution, it is a unit error, and it is off by orders of magnitude:
+
+        provisional (n=3, range 0.051-0.070)   0.0598 h/BCP    ~20% error
+        seed                                   5.0    h/BCP    ~80x error
+
+    Withholding a measurement is only conservative when the fallback measures
+    the same thing. Here it does not, so any observation beats none. Callers
+    that must distinguish the two still can: the source string says which.
+
+    A category with no samples at all is genuine cold start -- measured rates
+    diverge up to 2x between categories, so there is no valid cross-category
+    proxy, and the seed remains the only available answer.
+    """
     snap = baseline.get("config_snapshot", {}) or {}
     seed = float(snap.get("seed", 4.13))
     cats = baseline.get("categories", {}) or {}
     if category and category in cats:
         c = cats[category]
-        if not c.get("is_seed", True) and c.get("h_per_bcp") is not None:
-            return float(c["h_per_bcp"]), f"baseline:{category}"
+        if c.get("h_per_bcp") is not None:
+            suffix = ":provisional" if c.get("is_seed", True) else ""
+            return float(c["h_per_bcp"]), f"baseline:{category}{suffix}"
     return seed, "seed"
 
 

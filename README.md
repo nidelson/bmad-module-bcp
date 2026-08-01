@@ -70,7 +70,7 @@ Depois, dentro do projeto:
 1. **Régua imutável.** `bcp-rule.yaml` é a régua da CI&T transcrita verbatim. Sob MIT a imutabilidade não é mais exigência legal — é decisão de design: score só é comparável entre times se a régua for a mesma. Só hints editoriais são mutáveis. Ver [ATTRIBUTION.md](ATTRIBUTION.md).
 2. **Score.** Cada elemento aplicável recebe um tamanho; o tamanho mapeia para pontos Fibonacci (XS=1, S=2, M=3, L=5, XL=8). `total` = soma do breakdown.
 3. **Horas.** `estimated_hours = total × h_per_bcp(categoria)`. O fator vem do `bcp-baseline.yaml`.
-4. **Aprendizado.** `recalibrate` alimenta horas reais numa janela FIFO por categoria; ao atingir `min_samples`, a categoria sai do seed (`is_seed: false`) e passa a usar a média móvel.
+4. **Aprendizado.** `recalibrate` alimenta horas reais numa janela FIFO por categoria. A média móvel passa a valer **desde a primeira amostra** (fonte `baseline:<cat>:provisional`); ao atingir `min_samples` a categoria sai do seed (`is_seed: false`) e a marcação de provisório some. Só categoria sem amostra alguma usa o seed.
 
 ### Baseline e recalibração
 
@@ -82,9 +82,14 @@ Depois, dentro do projeto:
 
 > **Sobre o `4.13`:** é um **valor de partida**, não uma constante publicada pela CI&T. O framework
 > define o H/BCP como métrica **empírica por organização** — o repositório oficial e a documentação
-> não publicam fator de conversão. O seed existe só para o cold start; assim que a categoria atinge
-> `min_samples`, ele é substituído pela média móvel das horas reais e não deve mais aparecer em
-> nenhum `estimated_hours` gravado.
+> não publicam fator de conversão. O seed existe só para o cold start; assim que a categoria tem
+> **qualquer** amostra medida, ela substitui o seed e ele não deve mais aparecer em nenhum
+> `estimated_hours` daquela categoria.
+>
+> **Não iguale o seed à `bcp_reference_h_per_bcp`.** São réguas de coisas diferentes: o seed estima
+> quanto **o time** leva, a reference rate cota quanto **o mercado** levaria, e a alavancagem é a
+> razão entre as duas. Iguais, ela vale 1,0 por construção em toda categoria em cold start — a
+> métrica não mede ganho zero, ela deixa de medir.
 
 O baseline vive em `{output_folder}/implementation-artifacts/bcp-baseline.yaml`. Squad com histórico? `/bmad-bcp-backfill-baseline <glob>` pontua o passado e calibra sem esperar o acúmulo natural.
 

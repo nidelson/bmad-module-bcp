@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.1.11](https://github.com/nidelson/bmad-module-bcp/compare/v0.1.10...v0.1.11) (2026-08-01)
+
+
+### Funcionalidades
+
+* **score:** record hours_per_bcp and its source in the frontmatter ([#49](https://github.com/nidelson/bmad-module-bcp/issues/49)) ([212ff65](https://github.com/nidelson/bmad-module-bcp/commit/212ff6550c1a7d9b9a9ede4471ec913efbdb7daf))
+
 ## [0.1.10](https://github.com/nidelson/bmad-module-bcp/compare/v0.1.9...v0.1.10) (2026-08-01)
 
 

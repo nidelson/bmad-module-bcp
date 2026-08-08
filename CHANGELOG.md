@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.1.12](https://github.com/nidelson/bmad-module-bcp/compare/v0.1.11...v0.1.12) (2026-08-08)
+
+
+### Documentação
+
+* make English canonical and translate ATTRIBUTION ([#52](https://github.com/nidelson/bmad-module-bcp/issues/52)) ([818d3bd](https://github.com/nidelson/bmad-module-bcp/commit/818d3bd5419714efdd4a4c4323bd5382d1e2f1fa))
+
 ## [0.1.11](https://github.com/nidelson/bmad-module-bcp/compare/v0.1.10...v0.1.11) (2026-08-01)
 
 

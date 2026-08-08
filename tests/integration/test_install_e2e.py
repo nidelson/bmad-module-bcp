@@ -20,18 +20,18 @@ from pathlib import Path
 import pytest
 import yaml
 
-from tests.conftest import REPO_ROOT
+from tests.conftest import EXPECTED_SKILLS as _EXPECTED_SKILLS, REPO_ROOT
 
 pytestmark = pytest.mark.integration
 
 REQUIRED = os.environ.get("BCP_E2E_INSTALL") == "1"
 skip_reason = "set BCP_E2E_INSTALL=1 to run the real npx installer e2e"
 
-EXPECTED_SKILLS = {
-    "bmad-bcp-setup", "bmad-bcp-rule-card", "bmad-bcp-score",
-    "bmad-bcp-score-batch", "bmad-bcp-rescore", "bmad-bcp-recalibrate",
-    "bmad-bcp-backfill-baseline", "bmad-bcp-agent-bruno",
-}
+# Imported rather than restated. This test is opt-in and never runs in CI, so a
+# second copy of the list drifts silently: it held all eight skills long after
+# six of them moved to PULSE, and nothing would have said so until someone set
+# BCP_E2E_INSTALL=1.
+EXPECTED_SKILLS = set(_EXPECTED_SKILLS)
 
 _ANSI_RE = re.compile(r"\x1b\[[0-9;]*[A-Za-z]")
 _BOX_TRANS = str.maketrans("", "", "╭╮╯╰─│┌┐└┘├┤┬┴┼━┃║═╔╗╚╝")
@@ -68,11 +68,13 @@ def test_real_npx_install_is_clean_and_complete(tmp_path: Path):
     assert proc.returncode == 0, proc.stderr or proc.stdout
     out = _flatten(proc.stdout)
 
-    # 1. Module reported installed at the version pinned in module.yaml.
-    #    Read it dynamically so release-please bumps don't require touching
-    #    this test — the contract is "what module.yaml says is what installs".
-    module_version = yaml.safe_load((REPO_ROOT / "module.yaml").read_text())["module_version"]
-    assert f"BCP — Business Complexity Points Scorer (v{module_version}, installed)" in out
+    # 1. Module reported installed under the name and version pinned in
+    #    module.yaml. Both read dynamically — the contract is "what module.yaml
+    #    says is what installs". The version was already dynamic; the name was
+    #    not, and hardcoding it broke the moment the module was renamed to carry
+    #    (DEPRECATED). A test that restates metadata fails on a correct change.
+    module = yaml.safe_load((REPO_ROOT / "module.yaml").read_text())
+    assert f"{module['name']} (v{module['module_version']}, installed)" in out
 
     # 2. No canonical-schema conformance warning. This regressed once
     #    (module-help.csv used after/before instead of

@@ -1,209 +1,115 @@
-# BCP — Module Setup
+# BCP — Migration to PULSE
 
 ## Overview
 
-Instala e configura o módulo BCP (Business Complexity Points) num projeto BMAD. A identidade do módulo (nome, code, versão) vem de `assets/module.yaml`. Coleta preferências do usuário e as escreve em três arquivos:
+This module is **deprecated**. BCP scoring now ships inside
+[PULSE](https://github.com/nidelson/bmad-module-pulse), which owns the whole
+estimate-to-measurement loop: it scores the story, derives `estimated_hours`,
+times the implementation, and recalibrates the baseline from the real hours.
 
-- **`{project-root}/_bmad/custom/config.toml`** — camada durável, committed, **toml-first** (issue #36): a seção do módulo `[modules.bcp]` é gravada aqui (via `tomlkit`, preservando comentários e outras seções). É a camada que o `resolve_config.py` do core lê com prioridade sobre os defaults do installer em `config.toml`.
-- **`{project-root}/_bmad/config.yaml`** — bridge YAML legado: só settings core na raiz (ex. `output_folder`, `document_output_language`). A seção `bcp` **não** é mais gravada aqui; uma seção legada preexistente é **removida** (strip) no merge — esse é o caminho de migração yaml→toml (re-rodar o setup migra). Chaves user-only (`user_name`, `communication_language`) **nunca** vão aqui.
-- **`{project-root}/_bmad/config.user.yaml`** — settings pessoais, gitignorados: `user_name`, `communication_language` e qualquer variável de módulo marcada `user_setting: true`.
-- **`{project-root}/_bmad/module-help.csv`** — registra as capabilities do módulo no sistema de help.
+Nothing about the format changed. The BCP ruler, `bcp-baseline.yaml`, and the
+`bcp.*` frontmatter block are byte-for-byte what they were — the skills moved,
+the data did not. There is no conversion step and nothing to re-score.
 
-Além da config, o setup: aplica o **capability gate BMAD ≥6.6.0**, semeia o `bcp-baseline.yaml` por categoria, registra o agente Bruno no manifest, e emite um override `customize.toml` que conecta o scoring BCP ao workflow `bmad-create-story`.
+This workflow is what remains of the installer: it walks a project off this
+module and onto PULSE. Run it, then uninstall this module.
 
-Os scripts de config usam um padrão anti-zombie — a seção do módulo em `custom/config.toml` tem suas chaves gerenciadas sobrescritas (upsert, preservando chaves human-authored), e qualquer seção `bcp` legada no `config.yaml` é removida, então valores velhos nunca persistem em split-brain.
+## Why the skills are gone rather than redirecting
 
-`{project-root}` é um **token literal** nos valores de config — nunca substitua por um caminho real. Sinaliza ao LLM consumidor que o valor é relativo à raiz do projeto.
+Skill names are a single global namespace. `_bmad/_config/skill-manifest.csv`
+holds one row per skill name with one owning module, and installed skills land
+in `.claude/skills/<name>/` — one directory per name, whoever wrote last.
+
+Both modules ship `bmad-bcp-score`, `bmad-bcp-rule-card`, and the rest. Had this
+module kept those directories as pointers saying "moved to PULSE", installing or
+reinstalling it after PULSE would overwrite PULSE's working skills with the
+pointers. The redirect would cause the outage it was meant to prevent. Removing
+them is what makes the two modules safe to have installed at once.
 
 ## Conventions
 
-- Bare paths resolvem da skill root (`scripts/`, `assets/`).
-- `{skill-root}` resolve o diretório instalado desta skill (onde vive `customize.toml`).
-- `{project-root}`-prefixed paths resolvem da raiz do projeto.
+- Bare paths (e.g. `customize.toml`) resolve from the skill root.
+- `{project-root}`-prefixed paths resolve from the project root.
+- `{project-root}` is a literal token in BMAD config **values** — never
+  substitute it there. Filesystem path **arguments** are real paths: resolve it.
 
-## Reconcile Installed Skills (Self-Heal)
-
-Rode isto **primeiro de tudo** (antes do Capability Gate). O installer do BMAD faz deploy *aditivo* quando o BCP já está instalado: arquivos novos são copiados, mas os pré-existentes (`module.yaml`, `SKILL.md`, `workflow.md`, scripts…) nunca são sobrescritos e skills renomeadas/removidas não são podadas — atualizar por cima deixa um estado misto travado na versão antiga. Este passo força a sincronia de cada skill `bmad-bcp-*` a partir da fonte autoritativa (o cache de módulos custom do BMAD, recém-buscado).
-
-```bash
-python3 scripts/reconcile-skills.py --project-root "{project-root}"
-```
-
-Idempotente — numa árvore já sincronizada não escreve nada e reporta `action: up_to_date`. Não-fatal em install fresh: sem fonte/cache, sai 0 com `action: skipped_no_source` — siga normalmente. Exit codes: 0=sucesso (inclui `up_to_date`/`skipped_no_source`), 1=validação, 2=runtime. Mostre qualquer saída não-zero e pare. Stdlib-only — roda com `python3` (sem `uv run`).
-
-Inspecione o campo `action` do JSON:
-- `up_to_date` / `skipped_no_source` — siga em silêncio.
-- `reconciled` — reporte `from_version → to_version`. Se o payload trouxer `notice` dizendo que o `bmad-bcp-setup` foi atualizado in-place, diga ao usuário para rodar `/bmad-bcp-setup` mais uma vez (para a versão atual da skill executar) e pare.
-
-`python3 scripts/reconcile-skills.py --help` para uso completo (inclui `--source` e `--dry-run`).
-
-## Capability Gate (rodar PRIMEIRO)
-
-BCP requer **BMAD ≥6.6.0** — o framework de hooks do `customize.toml` (`activation_steps_*`, `persistent_facts`) é a superfície de integração que o BCP usa. Greenfield: sem caminhos de compat para versões antigas.
+## Step 1 — Install PULSE
 
 ```bash
-python3 scripts/detect_bmad_capability.py --project-root "{project-root}"
+npx bmad-method install --custom-source github:nidelson/bmad-module-pulse
 ```
 
-O script lê a versão precisa de `{project-root}/_bmad/_config/manifest.yaml` e imprime JSON em stdout. Trate o exit code:
+Then run `/bmad-pulse-setup` and answer `bcp` when it asks for the estimation
+method. That is the switch: `pulse_estimation_method = "bcp"` is what turns the
+scoring skills on, and it is opt-in permanently — PULSE without it is the
+baseline product, not a degraded one.
 
-- **Exit 0** (`bmad-6.6.0+`) — prossiga com o setup.
-- **Exit 1** (`bmad-too-old`) — aborte: "BCP v0.1.0 requer BMAD ≥6.6.0. Detectado {detected_version}. Atualize o BMAD com `npx bmad-method install` e re-rode `/bmad-bcp-setup`."
-- **Exit 2** (`bmad-not-installed`) — aborte: "BMAD não está instalado neste projeto. Rode `npx bmad-method install` primeiro, depois `/bmad-bcp-setup`."
+Setup will do two things that matter to a migrating project. Let it.
 
-## On Activation
+## Step 2 — Move the configuration
 
-1. **Resolver customização do workflow:** rode `python3 {project-root}/_bmad/scripts/resolve_customization.py --skill {skill-root} --key workflow`. Guarde `activation_steps_prepend`, `activation_steps_append`, `persistent_facts` e `on_complete` para os passos posteriores. Se o script falhar, resolva o bloco `workflow` lendo `{skill-root}/customize.toml` + os overrides team/user em `{project-root}/_bmad/custom/bmad-bcp-setup.{toml,user.toml}` (escalares: override vence; arrays: append).
-2. **Prepend steps:** execute cada entrada de `workflow.activation_steps_prepend` em ordem.
-3. **Persistent facts:** trate cada entrada de `workflow.persistent_facts` como contexto fundacional pela sessão toda. Entradas com prefixo `file:` carregam o conteúdo do path/glob sob `{project-root}`; demais são fatos verbatim.
-4. Leia `assets/module.yaml` para metadados e definições de variáveis (o campo `code` é o identificador do módulo).
-5. Verifique se já há config do módulo — seção `[modules.bcp]` em `{project-root}/_bmad/custom/config.toml`, ou uma seção `bcp` legada em `{project-root}/_bmad/config.yaml`. Se houver, informe que é uma atualização (a legada será migrada para toml).
-6. Verifique config legacy per-module em `{project-root}/_bmad/bcp/config.yaml` e `{project-root}/_bmad/core/config.yaml`. Se existirem:
-   - Sem seção `bcp` no `config.yaml` consolidado → **install fresco**: informe que config do installer foi detectada e será consolidada.
-   - Com seção `bcp` já presente → **migração legacy**: informe que valores legacy serão usados como defaults de fallback.
-   - Em ambos os casos, os arquivos/diretórios per-module são limpos ao final.
-7. **Append steps:** execute cada entrada de `workflow.activation_steps_append` em ordem.
+The `bcp_*` settings live under `[modules.bcp]` in the merged BMAD config,
+written by **this** module. Uninstalling it deletes that table.
 
-Se o usuário passar argumentos (ex. `aceitar todos os defaults`, `--headless`, ou valores inline), mapeie os valores fornecidos, use defaults para o resto e pule o prompting interativo. Ainda exiba o resumo de confirmação no final.
+PULSE reads `[modules.pulse]` first and falls back to `[modules.bcp]`, so
+nothing breaks the moment PULSE is installed. But the fallback only lasts as
+long as this module does. `/bmad-pulse-setup` detects values still reading
+`modules.bcp` and offers to copy them into `_bmad/custom/config.toml` under
+`[modules.pulse]`. Accept.
 
-## Collect Configuration
-
-Peça os valores ao usuário. Mostre defaults entre colchetes. Apresente tudo junto para o usuário responder de uma vez só com o que quer mudar. Nunca diga "aperte enter" ou "deixe em branco" — num chat ele precisa digitar algo.
-
-**Prioridade de default** (maior vence): valores existentes no config novo > valores legacy > defaults de `assets/module.yaml`.
-
-**Core config** (só se nenhuma chave core existir): `user_name` (default: BMad), `communication_language` e `document_output_language` (default: Português do Brasil — pergunte como uma única questão de idioma), `output_folder` (default: `{project-root}/_bmad-output`). `user_name` e `communication_language` vão exclusivamente para `config.user.yaml`.
-
-**Module config**: leia cada variável em `assets/module.yaml` com campo `prompt` e pergunte usando esse prompt e seu default (ou valor legacy se disponível).
-
-**Destaque obrigatório — consentimento de overwrite:** a variável `bcp_overwrite_estimated_hours` é load-bearing. Deixe explícito ao usuário que instalar com `yes` autoriza o BCP a sobrescrever `estimated_hours` nas stories (a auditoria original fica preservada em `estimated_hours_pre_bcp`). Não trate como um prompt qualquer — confirme que o usuário entendeu o consentimento.
-
-## Write Files
-
-Escreva um JSON temporário com as respostas no formato `{"core": {...}, "module": {...}}` (omita `core` se já existir). Rode os dois scripts (paralelos — escrevem arquivos diferentes):
+Check it landed before uninstalling:
 
 ```bash
-uv run scripts/merge-config.py --config-path "{project-root}/_bmad/config.yaml" --custom-config-path "{project-root}/_bmad/custom/config.toml" --user-config-path "{project-root}/_bmad/config.user.yaml" --module-yaml assets/module.yaml --answers {temp-file} --legacy-dir "{project-root}/_bmad"
-python3 scripts/merge-help-csv.py --target "{project-root}/_bmad/module-help.csv" --source assets/module-help.csv --legacy-dir "{project-root}/_bmad" --module-code bcp
+python3 {project-root}/.claude/skills/bmad-bcp-score/scripts/bcp_config.py \
+    --project-root "{project-root}"
 ```
 
-> **Nota (PEP 723):** só o `merge-config.py` roda via `uv run` — ele declara dependências de terceiros (`pyyaml`, `tomlkit`) no header inline `# /// script`. Com `python3` puro falha: `Error: tomlkit is required (PEP 723 dependency)`. `uv run` lê o header e provisiona num ambiente efêmero. Os demais scripts deste skill são stdlib-only e rodam com `python3`.
+Every key in the `sources` map should read `modules.pulse` — or `default` for
+keys the project never configured. Any key still reading `modules.bcp` is a key
+that will silently revert to a built-in default when this module goes.
 
-`merge-config.py` grava a seção do módulo `[modules.bcp]` em `custom/config.toml` (**toml-first**, via `tomlkit` — preserva comentários/outras seções), grava só as chaves core no `config.yaml`, e faz **strip** de qualquer seção `bcp` legada do `config.yaml` (migração yaml→toml). O `--custom-config-path` tem default `{dir do --config-path}/custom/config.toml`, mas passá-lo explícito deixa o destino claro. Ambos imprimem JSON em stdout (confira `custom_config_path`, `module_keys`). Se algum sair não-zero, mostre o erro e pare. Os scripts leem valores legacy como fallback e apagam os arquivos legacy após o merge — confira `legacy_configs_deleted` e `legacy_csvs_deleted`.
+`bcp_baseline_seed` and `bcp_reference_h_per_bcp` are the two to check hardest.
+The seed drives every cold-start estimate; the reference rate is the frozen
+denominator the leverage-vs-reference figure is measured against. A project that
+calibrated them and then lost them gets plausible numbers that describe nobody.
 
-## Register Agent in Party Mode Roster
+## Step 3 — Keep the baseline
 
-Registre o agente Bruno para ele entrar no roster do Party Mode e features agent-aware.
+`bcp-baseline.yaml` carries every sample the team accumulated and the per-category
+rates recalibration derived from them. PULSE reads the same file at the same
+path, in the same schema.
 
-O Party Mode monta o roster a partir da tabela `[agents]` resolvida pelo `resolve_config.py` — deep-merge de `{project-root}/_bmad/config.toml` (base) e `{project-root}/_bmad/custom/config.toml` (team). Os módulos oficiais têm suas entradas `[agents.*]` escritas no `config.toml` base pelo installer do BMAD core, mas um **módulo custom** como o BCP nunca é escrito lá — então sem este passo o Bruno fica instalado como skill mas invisível ao Party Mode (`/bmad-party-mode` nunca o lista). Registre-o na camada team `custom/config.toml`, que sobrevive a re-install:
+`/bmad-pulse-setup` seeds a baseline only when none exists — it reports
+`skipped_exists` and leaves yours untouched. Do **not** pass `--force` to
+`seed_baseline.py` on a migration: it would replace measured rates with the
+cold-start seed and report success.
 
-```bash
-uv run scripts/register-party-agent.py --project-root "{project-root}" --fragment assets/agent-manifest-fragment.csv
-```
+## Step 4 — Uninstall this module
 
-O script faz upsert de `[agents.bmad-bcp-agent-bruno]` (anti-zombie, idempotente) a partir dos valores do `agent-manifest-fragment.csv`, preservando comentários e outras seções (tomlkit round-trip). Roda via `uv run` pela dependência PEP 723 `tomlkit`. Confira `agent_key` e `custom_config_path` no JSON.
-
-Em caso de sucesso, informe: "Agente Bruno registrado no roster do Party Mode (`_bmad/custom/config.toml` → `[agents.bmad-bcp-agent-bruno]`) — rode `/bmad-party-mode` para vê-lo. Para destacá-lo, adicione um grupo curado (ex.: sala de planning/estimativa) em `_bmad/custom/bmad-party-mode.toml`."
-
-### `agent-manifest.csv` legado (opcional, compat)
-
-Layouts BMAD antigos também leem `{project-root}/_bmad/_config/agent-manifest.csv`. Se esse arquivo existir, faça merge adicional do fragment (inócuo onde não é usado). Se não existir, pule — o registro em `[agents]` acima é o que o Party Mode de fato lê.
-
-```bash
-python3 scripts/merge-help-csv.py --target "{project-root}/_bmad/_config/agent-manifest.csv" --source assets/agent-manifest-fragment.csv --module-code bcp
-```
-
-## Seed Baseline
-
-Semeie o baseline por categoria para o cold start. Idempotente — se o arquivo já existe, não toca (exceto `--force`).
-
-```bash
-python3 scripts/seed_baseline.py --baseline-path "{project-root}/<bcp_baseline_path resolvido>" --seed <bcp_baseline_seed> --min-samples <bcp_baseline_min_samples> --rolling-window <bcp_baseline_rolling_window>
-```
-
-Use os valores coletados (`bcp_baseline_path`, `bcp_baseline_seed`, `bcp_baseline_min_samples`, `bcp_baseline_rolling_window`). Resolva o token `{project-root}`/`{output_folder}` do path para o caminho real apenas na operação de filesystem. Cheque o campo `action` no JSON (`created` | `skipped_exists`) para o resumo.
-
-## Create Output Directories
-
-Crie os diretórios de saída configurados. Para operações de filesystem, resolva o token `{project-root}` para o caminho real e crie cada valor path-type do `config.yaml` que ainda não existe (`output_folder` e qualquer variável de módulo cujo valor comece com `{project-root}/` ou `{output_folder}/`). Os paths no config continuam com o token literal; só os diretórios em disco usam o path resolvido. Use `mkdir -p`.
-
-## Cleanup Legacy Directories
-
-Após os merges, remova os diretórios de pacote do installer. As skills já estão instaladas em `{project-root}/.claude/skills/` — `{project-root}/_bmad/` só deve conter config.
-
-```bash
-python3 scripts/cleanup-legacy.py --bmad-dir "{project-root}/_bmad" --module-code bcp --skills-dir "{project-root}/.claude/skills"
-```
-
-O script verifica que toda skill nos diretórios legacy existe em `.claude/skills/` antes de remover. Idempotente — diretórios ausentes não são erro. Se sair não-zero, mostre o erro e pare. Use `directories_removed` e `files_removed_count` no JSON para o resumo.
-
-## Generate Customize Overrides (BCP hooks)
-
-### Hook 1 — Scoring BCP no `bmad-create-story`
-
-Conecte o scoring BCP ao `bmad-create-story` emitindo um override `customize.toml` no projeto consumidor. Sobrevive a upgrades do BMAD core porque vive em `{project-root}/_bmad/custom/`, que o BMAD nunca sobrescreve. O capability gate ≥6.6.0 já foi validado no início.
-
-```bash
-python3 scripts/inject_customize.py --project-root "{project-root}" --skill bmad-create-story
-```
-
-Política de conflito **abort + `--force`**: se o destino já existe, o script sai com exit 3 e não toca no arquivo. Mostre a mensagem verbatim ao usuário (inclui o path e como re-rodar com `--force`). **Não** re-tente com `--force` automaticamente — a escolha é do usuário.
-
-### Hook 2 — Auto-recalibrate no `bmad-code-review` (issue #18)
-
-Conecte o recalibrate BCP ao `bmad-code-review` usando **modo merge** (`--merge`). Este hook acrescenta a instrução de recalibração ao `on_complete` existente — sem sobrescrever o arquivo caso outro módulo (ex.: PULSE) já o tenha registrado. Se o arquivo não existir, cria do zero.
-
-```bash
-python3 scripts/inject_customize.py --project-root "{project-root}" --skill bmad-code-review
-```
-
-O script detecta automaticamente o modo merge para `bmad-code-review`. Exit codes: `0` = sucesso (criou ou fez merge), `1` = já presente (idempotente, sem modificação). Nunca sai com exit 3 em modo merge — não há conflito destrutivo.
-
-**Comportamento em runtime:** ao fim de cada code review, o LLM verifica se a story tem `bcp.total` no frontmatter. Se sim, lê `actual_hours` da seção `pulse_metrics` do sprint-status e invoca `bmad-bcp-recalibrate`. Se qualquer dado estiver ausente, pula silenciosamente. Idempotente — `recalibrate.py` deduplica por `id` da story.
-
-### .gitignore Allowlist Snippet
-
-Imprima um snippet copy-paste para o `.gitignore` do consumidor versionar `{project-root}/_bmad/custom/*.toml` (overrides de time) mantendo `*.user.toml` privado. Script read-only — nunca modifica o arquivo.
-
-```bash
-python3 scripts/print_gitignore_snippet.py --project-root "{project-root}"
-```
-
-Mostre o stdout do script ao usuário.
-
-### Post-Injection
-
-Informe:
-
-- "Scoring BCP integrado via `{project-root}/_bmad/custom/bmad-create-story.toml`. Toda story criada por `/bmad-create-story` será pontuada automaticamente."
-- "Auto-recalibrate integrado via `{project-root}/_bmad/custom/bmad-code-review.toml`. A cada code review concluído, o BCP verifica se a story tem dados suficientes para recalibrar o baseline."
-- "Para desabilitar o scoring: delete `{project-root}/_bmad/custom/bmad-create-story.toml`."
-- "Para desabilitar o auto-recalibrate: remova a instrução BCP do `on_complete` em `{project-root}/_bmad/custom/bmad-code-review.toml`."
-
-Se algum passo acima falhar, **não** bloqueie o resto do setup. Reporte a falha e continue — o usuário pode re-rodar a peça que falhou depois.
+Once the config reads `modules.pulse` and scoring runs under PULSE, remove this
+module from the project's BMAD install and drop `[modules.bcp]` from
+`_bmad/config.toml`.
 
 ## Confirm
 
-Use o JSON dos scripts para exibir o que foi escrito: valores de config (core na raiz do `config.yaml`, módulo em `custom/config.toml [modules.bcp]` — `module_keys`/`custom_config_path`), user settings em `config.user.yaml` (`user_keys`), entradas de help, install fresco vs update, baseline semeado vs preexistente, migração legacy/strip da seção `bcp` do yaml (se houve). Depois exiba o `module_greeting` de `assets/module.yaml`.
+Report to the user:
+
+- PULSE installed, with `pulse_estimation_method = "bcp"`.
+- The `bcp_*` keys now resolving from `modules.pulse` — name any that still read
+  `modules.bcp` or `default`, and say what each one does.
+- The baseline preserved, with its sample count and how many categories have
+  left the seed.
+- That this module can now be uninstalled.
 
 ## Outcome
 
-Uma vez conhecidos `user_name` e `communication_language` (de input coletado, argumentos ou config existente), use-os consistentemente pelo resto da sessão: trate o usuário pelo nome configurado e comunique no `communication_language` configurado.
+Use the user's configured name and language for the rest of the session:
 
-## On Completion
+```bash
+uv run "{project-root}/_bmad/scripts/resolve_config.py" \
+    --project-root "{project-root}" --key core
+```
 
-Após o Outcome (e depois que o install completou — config gravada, baseline semeado, agente registrado, hooks injetados, legacy limpo), siga `workflow.on_complete` resolvido na ativação:
-
-- Valor **vazio** (default) → encerre sem ação adicional.
-- Valor **não-vazio** → siga a string verbatim como instrução terminal — é o último passo antes de sair.
-
-**Invariantes (sempre verdade — qualquer override precisa respeitar):**
-
-- O hook roda **após** o install — todos os artefatos (config, baseline, manifest, customize hooks) já estão no disco.
-- O hook **NÃO pode mutar** os artefatos do install (single-writer principle — os scripts de setup são donos desses arquivos durante a execução).
-- Erro no hook é **warn**, não rollback — o install já completou.
-- Em install falho (script sai não-zero antes do Outcome) o hook é **pulado**.
-
-Customizar override (team-level, committed): edite `{project-root}/_bmad/custom/bmad-bcp-setup.toml`. User-level (gitignored): `bmad-bcp-setup.user.toml`.
-
-> **Nota sobre persistência do override:** o `customize.toml` do `bmad-bcp-setup` (defaults da skill) é regravado a cada re-instalação. Para hooks duráveis, **sempre** use as camadas `{project-root}/_bmad/custom/*.toml` (team) ou `*.user.toml` (user) — essas o BMAD nunca sobrescreve.
+Take `user_name` and `communication_language` from the `core` table. If the
+script is absent or exits non-zero, address the user neutrally in English — do
+not write or repair any config file.

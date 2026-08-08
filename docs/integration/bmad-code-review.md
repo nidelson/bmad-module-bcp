@@ -1,5 +1,10 @@
 # Integração BCP ↔ bmad-code-review
 
+> **Historical.** This module is deprecated and the integration it describes is
+> now owned by [PULSE](https://github.com/nidelson/bmad-module-pulse), which
+> runs both hooks from one authored `on_complete` sequence. Kept as the record
+> of how the boundary was drawn, not as instructions to follow.
+
 > Documento canônico em PT-BR ([ADR 0001](../ADR/0001-localization-strategy.md)).
 > Identificadores de skill/campo são EN.
 

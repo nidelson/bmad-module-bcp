@@ -18,20 +18,13 @@
     {
       "name": "bmad-module-bcp",
       "source": "./",
-      "description": "Pontua stories com o framework Business Complexity Points da CI&T e deriva estimated_hours a partir do score.",
+      "description": "DEPRECATED — BCP scoring moved to bmad-module-pulse. This module now ships only the migration path.",
       "version": "0.1.12",
       "author": {
         "name": "Nidelson Gimenez"
       },
       "skills": [
-        "./skills/bmad-bcp-setup",
-        "./skills/bmad-bcp-agent-bruno",
-        "./skills/bmad-bcp-rule-card",
-        "./skills/bmad-bcp-score",
-        "./skills/bmad-bcp-score-batch",
-        "./skills/bmad-bcp-rescore",
-        "./skills/bmad-bcp-recalibrate",
-        "./skills/bmad-bcp-backfill-baseline"
+        "./skills/bmad-bcp-setup"
       ]
     }
   ]

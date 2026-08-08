@@ -5,6 +5,74 @@ skip to the version you are migrating from.
 
 ---
 
+## Module deprecated — scoring moves to PULSE (nidelson/bmad-module-pulse#84)
+
+BCP scoring now ships inside
+[PULSE](https://github.com/nidelson/bmad-module-pulse). This module keeps only
+`/bmad-bcp-setup`, rewritten as the migration path, and the repository is
+archived — archived rather than deleted, because its issues and pull requests
+are the record of how the ruler was frozen and the baseline calibrated.
+
+### Nothing about your data changes
+
+The BCP ruler, `bcp-baseline.yaml`, and the `bcp.*` frontmatter block are
+byte-for-byte what they were. The skills moved; the schema did not. There is no
+conversion step, nothing to re-score, and no version bump to the frontmatter
+contract.
+
+### What to do
+
+1. Install PULSE and run `/bmad-pulse-setup`, answering `bcp` when it asks for
+   the estimation method. That is the switch — scoring is opt-in and stays that
+   way.
+2. Run `/bmad-bcp-setup` here one last time. It moves the `bcp_*` keys and
+   verifies the baseline survived.
+3. Uninstall this module and drop `[modules.bcp]` from `_bmad/config.toml`.
+
+### The step that is easy to miss
+
+The `bcp_*` settings live under `[modules.bcp]`, a table **this** module's
+`module.yaml` produces. Uninstalling deletes it.
+
+PULSE reads `[modules.pulse]` first and falls back to `[modules.bcp]`, so
+nothing breaks the moment PULSE arrives — but that fallback lasts exactly as
+long as this module does. Resolution does not fail when the table disappears;
+it returns built-in defaults and reports success. A project that calibrated
+`bcp_baseline_seed` or `bcp_reference_h_per_bcp` and then lost them gets
+plausible numbers that describe nobody.
+
+Check with the `sources` map before uninstalling:
+
+```bash
+python3 .claude/skills/bmad-bcp-score/scripts/bcp_config.py --project-root .
+```
+
+Every key should read `modules.pulse`, or `default` for keys you never
+configured. Anything still reading `modules.bcp` is a key you are about to lose.
+
+### Do not re-seed the baseline
+
+`/bmad-pulse-setup` creates `bcp-baseline.yaml` only when none exists and
+reports `skipped_exists` otherwise. Do not pass `--force` to `seed_baseline.py`
+on a migration: it replaces measured per-category rates with the cold-start seed
+and reports success.
+
+### Why the skills were removed instead of pointing at PULSE
+
+Skill names are one global namespace. `_bmad/_config/skill-manifest.csv` holds
+one row per skill name with one owning module, and installed skills land in
+`.claude/skills/<name>/` — one directory per name, last writer wins.
+
+Both modules ship `bmad-bcp-score`, `bmad-bcp-rule-card` and the rest. Had this
+module kept those directories as notices saying "moved to PULSE", installing or
+reinstalling it after PULSE would have overwritten PULSE's working skills with
+the notices. Archived repositories stay cloneable, so this module stays
+installable — the redirect would have caused the outage it was meant to prevent,
+indefinitely. Removing the directories is what makes both modules safe to have
+installed at the same time.
+
+---
+
 ## toml-first config — `config.toml` with per-key `config.yaml` fallback (issue #36)
 
 **Who this affects:** installs on post-#2285 BMAD, where the canonical config is

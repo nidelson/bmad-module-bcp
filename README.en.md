@@ -1,5 +1,32 @@
 # BCP — Business Complexity Points Scorer
 
+> # ⚠️ Deprecated module
+>
+> **BCP scoring now lives in [PULSE](https://github.com/nidelson/bmad-module-pulse).**
+> This repository is archived and keeps only the migration path.
+>
+> Nothing about the format changed: the BCP ruler, `bcp-baseline.yaml` and the
+> `bcp.*` frontmatter block are byte-for-byte what they were. The skills moved,
+> the data did not — there is no conversion and nothing to re-score.
+>
+> **To migrate:**
+>
+> ```bash
+> npx bmad-method install --custom-source github:nidelson/bmad-module-pulse
+> ```
+>
+> Run `/bmad-pulse-setup` and answer `bcp` when it asks for the estimation
+> method. Then run `/bmad-bcp-setup` here one last time: it moves the `bcp_*`
+> keys from `[modules.bcp]` to `[modules.pulse]` and preserves the baseline.
+> Only then uninstall this module.
+>
+> **Why the skills are gone rather than redirecting:** skill names are one
+> global namespace — both modules shipped `bmad-bcp-score`, and a pointer left
+> here would overwrite PULSE's working skill whenever this module is installed
+> after it. The redirect would cause the outage it exists to prevent.
+
+---
+
 [![BMAD Module](https://img.shields.io/badge/BMAD-Module-blue)](https://docs.bmad-method.org/)
 [![BMAD Version](https://img.shields.io/badge/BMAD-%3E%3D6.6.0-blue)](https://docs.bmad-method.org/)
 [![GitHub release](https://img.shields.io/github/v/release/nidelson/bmad-module-bcp)](https://github.com/nidelson/bmad-module-bcp/releases)

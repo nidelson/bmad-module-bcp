@@ -4,11 +4,17 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## O que é este repositório
 
-Projeto **meta**: usa a metodologia BMAD para **construir um novo módulo BMAD** chamado `bmad-module-bcp`. O produto final é um módulo de scoring de complexidade (Business Complexity Points / BCP, framework publicado pela CI&T) que roda ao lado do módulo irmão PULSE.
+> ⚠️ **Módulo descontinuado e arquivado.** Não implemente features aqui.
 
-Estado atual: **greenfield, fase de planejamento**. Existe Product Brief completo; o PRD foi iniciado (`_bmad-output/planning-artifacts/prd.md` — só o cabeçalho, corpo não escrito). **O código do módulo ainda não foi scaffoldado** — não há diretório `skills/` (saída do BMad Builder) ainda. Ler o Product Brief antes de qualquer trabalho de planejamento: `_bmad-output/planning-artifacts/product-brief.md`.
+O scoring BCP foi portado para o [PULSE](https://github.com/nidelson/bmad-module-pulse) (issue `nidelson/bmad-module-pulse#84`), que passou a ser dono do ciclo inteiro: pontua a story, deriva `estimated_hours`, cronometra a implementação e recalibra o baseline com as horas reais. **Trabalho novo de scoring vai para lá.**
 
-Repositório irmão (acesso de leitura concedido em `settings.local.json`): `/Users/nidelson/Projects/nidelson/bmad-module-pulse`. O contrato BCP↔PULSE é o ativo central — consultar o PULSE ao desenhar a integração.
+O que restou aqui: `skills/bmad-bcp-setup`, reescrita como caminho de migração, e o histórico. O repositório é arquivado — não deletado — porque suas issues e PRs são o registro de como a régua foi congelada e o baseline calibrado.
+
+**As demais skills `bmad-bcp-*` foram removidas, não viradas ponteiro.** Nome de skill é namespace global: `skill-manifest.csv` tem uma linha por nome com um módulo dono, e skill instalada vai para `.claude/skills/<nome>/` — um diretório por nome, último a escrever ganha. Um ponteiro deixado aqui sobrescreveria a skill funcional do PULSE sempre que este módulo fosse instalado depois. Repositório arquivado continua clonável, logo continua instalável: o redirect causaria a quebra que deveria evitar, indefinidamente.
+
+Se você está aqui para migrar um projeto, o guia é [`docs/MIGRATION.md`](docs/MIGRATION.md).
+
+Repositório irmão (acesso de leitura concedido em `settings.local.json`): `/Users/nidelson/Projects/nidelson/bmad-module-pulse`.
 
 ## Arquitetura do produto a ser construído
 

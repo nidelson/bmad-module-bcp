@@ -1,9 +1,2 @@
 module,skill,display-name,menu-code,description,action,args,phase,preceded-by,followed-by,required,output-location,outputs
-BCP,bmad-bcp-setup,Setup,BS,"Instala e configura o módulo BCP no projeto",setup,"",anytime,,,true,,"config.yaml bcp-baseline.yaml customize.toml"
-BCP,bmad-bcp-rule-card,Rule Card,RC,"Exibe a régua BCP (10 elementos × 5 tamanhos)",rule-card,"[elemento]",anytime,,,false,,"régua renderizada + atribuição CC BY-NC-ND"
-BCP,bmad-bcp-score,Score,SC,"Pontua uma story e deriva estimated_hours do score",score,"[story]",anytime,bmad-bcp-setup:setup,,false,,"frontmatter bcp.* + estimated_hours derivado"
-BCP,bmad-bcp-score-batch,Score Batch,SB,"Pontua várias stories em lote (retroativo)",score-batch,"[glob]",anytime,bmad-bcp-score:score,,false,,"N frontmatters bcp.* scored_by=retroactive"
-BCP,bmad-bcp-rescore,Rescore,RS,"Repontua uma story já pontuada (total + history + horas)",rescore,"[story]",anytime,bmad-bcp-score:score,,false,,"bcp.* atualizado + bcp.history + estimated_hours"
-BCP,bmad-bcp-recalibrate,Recalibrate,RB,"Recalibra h_per_bcp por categoria com horas reais",recalibrate,"[story|--actual-hours]",anytime,bmad-bcp-score:score,,false,,"bcp-baseline.yaml atualizado (h_per_bcp + is_seed)"
-BCP,bmad-bcp-backfill-baseline,Backfill Baseline,BF,"Mata o cold-start do baseline a partir do histórico do squad",backfill-baseline,"[glob]",anytime,bmad-bcp-recalibrate:recalibrate,,false,,"baseline calibrado a partir do histórico (sai do seed)"
-BCP,bmad-bcp-agent-bruno,Bruno,BR,"Coach de Complexidade BCP (agente facilitador opcional)",agent-bruno,"",anytime,bmad-bcp-setup:setup,,false,,"sessão de coaching de scoring BCP"
+BCP,bmad-bcp-setup,Migrate to PULSE,BS,"DEPRECATED — walks this project off the BCP module and onto PULSE, which now owns scoring",setup,"",anytime,,,true,,"PULSE installed + bcp_* config moved to [modules.pulse]"

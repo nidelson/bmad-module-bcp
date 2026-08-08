@@ -1,24 +1,26 @@
 code: bcp
-name: BCP — Business Complexity Points Scorer
-header: 'BCP: Business Complexity Points Scorer'
+name: BCP — Business Complexity Points Scorer (DEPRECATED)
+header: 'BCP: Business Complexity Points Scorer (DEPRECATED)'
 subheader: >-
-  Pontua stories com o framework Business Complexity Points da CI&T e deriva
-  estimated_hours a partir do score.
+  DEPRECATED — BCP scoring moved to bmad-module-pulse. This module now ships
+  only the migration path.
 description: >-
-  Módulo de scoring que pontua stories pelo framework Business Complexity Points
-  (BCP) da CI&T, deriva estimated_hours do score, é dono do baseline por
-  categoria e escreve de volta no frontmatter da story. Roda ao lado do módulo
-  irmão PULSE com fronteira de ownership limpa.
+  DEPRECATED. The scoring skills, the BCP ruler and the per-category baseline
+  now live in bmad-module-pulse, which owns the whole estimate-to-measurement
+  loop. Nothing about the data format changed — the skills moved, the baseline
+  and the bcp.* frontmatter did not. Install PULSE, answer "bcp" to its
+  estimation-method prompt, then run /bmad-bcp-setup here to move the bcp_*
+  configuration and uninstall this module.
 module_version: 0.1.12
 default_selected: false
 module_greeting: >
-  BCP instalado com sucesso! Régua antes de régua.
+  Este módulo foi descontinuado. O scoring BCP agora vive no PULSE
+  (https://github.com/nidelson/bmad-module-pulse), que passou a ser dono do
+  ciclo inteiro: pontua, deriva estimated_hours, mede a implementação e
+  recalibra o baseline com as horas reais.
 
-  Use /bmad-bcp-score para pontuar uma story e /bmad-bcp-rule-card para
-  consultar a régua BCP (10 elementos × 5 tamanhos). Fale com
-  /bmad-bcp-agent-bruno para coaching de scoring.
-
-  Dúvidas e sugestões: https://github.com/nidelson/bmad-module-bcp
+  Nada mudou de formato. Rode /bmad-bcp-setup para migrar a configuração e o
+  baseline, e depois desinstale este módulo.
 bcp_overwrite_estimated_hours:
   prompt: >-
     BCP pode sobrescrever o estimated_hours definido pela Amelia? Instalar o
@@ -61,7 +63,7 @@ bcp_baseline_seed:
   prompt: >-
     Seed de horas por BCP para cold start (valor de partida; a CI&T nao publica
     fator de conversao)?
-  default: '4.13'
+  default: '5.0'
   result: '{value}'
 bcp_baseline_min_samples:
   prompt: Amostras mínimas antes de uma categoria sair do seed?
@@ -77,7 +79,7 @@ bcp_reference_h_per_bcp:
     cotação/benchmark do time, distinta do seed e do fator recalibrado. Gera
     estimated_hours_reference (denominador estável que não colapsa). Muda só por
     governança, nunca recalibra. Default = seed.
-  default: '4.13'
+  default: '5.0'
   result: '{value}'
 bcp_data_folder:
   prompt: Pasta onde o baseline e artefatos BCP ficam armazenados?

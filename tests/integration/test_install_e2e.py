@@ -20,18 +20,18 @@ from pathlib import Path
 import pytest
 import yaml
 
-from tests.conftest import REPO_ROOT
+from tests.conftest import EXPECTED_SKILLS as _EXPECTED_SKILLS, REPO_ROOT
 
 pytestmark = pytest.mark.integration
 
 REQUIRED = os.environ.get("BCP_E2E_INSTALL") == "1"
 skip_reason = "set BCP_E2E_INSTALL=1 to run the real npx installer e2e"
 
-EXPECTED_SKILLS = {
-    "bmad-bcp-setup", "bmad-bcp-rule-card", "bmad-bcp-score",
-    "bmad-bcp-score-batch", "bmad-bcp-rescore", "bmad-bcp-recalibrate",
-    "bmad-bcp-backfill-baseline", "bmad-bcp-agent-bruno",
-}
+# Imported rather than restated. This test is opt-in and never runs in CI, so a
+# second copy of the list drifts silently: it held all eight skills long after
+# six of them moved to PULSE, and nothing would have said so until someone set
+# BCP_E2E_INSTALL=1.
+EXPECTED_SKILLS = set(_EXPECTED_SKILLS)
 
 _ANSI_RE = re.compile(r"\x1b\[[0-9;]*[A-Za-z]")
 _BOX_TRANS = str.maketrans("", "", "╭╮╯╰─│┌┐└┘├┤┬┴┼━┃║═╔╗╚╝")

@@ -11,7 +11,7 @@ description: >-
   and the bcp.* frontmatter did not. Install PULSE, answer "bcp" to its
   estimation-method prompt, then run /bmad-bcp-setup here to move the bcp_*
   configuration and uninstall this module.
-module_version: 0.1.12
+module_version: 0.1.13
 default_selected: false
 module_greeting: >
   Este módulo foi descontinuado. O scoring BCP agora vive no PULSE

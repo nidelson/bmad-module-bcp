@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.1.13](https://github.com/nidelson/bmad-module-bcp/compare/v0.1.12...v0.1.13) (2026-08-08)
+
+
+### Manutenção
+
+* deprecate the module — scoring now lives in PULSE ([#54](https://github.com/nidelson/bmad-module-bcp/issues/54)) ([e57f9fa](https://github.com/nidelson/bmad-module-bcp/commit/e57f9fa383549cca94722d4aff3fbd71cf3264cc))
+
 ## [0.1.12](https://github.com/nidelson/bmad-module-bcp/compare/v0.1.11...v0.1.12) (2026-08-08)
 
 

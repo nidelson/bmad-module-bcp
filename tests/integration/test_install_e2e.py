@@ -68,11 +68,13 @@ def test_real_npx_install_is_clean_and_complete(tmp_path: Path):
     assert proc.returncode == 0, proc.stderr or proc.stdout
     out = _flatten(proc.stdout)
 
-    # 1. Module reported installed at the version pinned in module.yaml.
-    #    Read it dynamically so release-please bumps don't require touching
-    #    this test — the contract is "what module.yaml says is what installs".
-    module_version = yaml.safe_load((REPO_ROOT / "module.yaml").read_text())["module_version"]
-    assert f"BCP — Business Complexity Points Scorer (v{module_version}, installed)" in out
+    # 1. Module reported installed under the name and version pinned in
+    #    module.yaml. Both read dynamically — the contract is "what module.yaml
+    #    says is what installs". The version was already dynamic; the name was
+    #    not, and hardcoding it broke the moment the module was renamed to carry
+    #    (DEPRECATED). A test that restates metadata fails on a correct change.
+    module = yaml.safe_load((REPO_ROOT / "module.yaml").read_text())
+    assert f"{module['name']} (v{module['module_version']}, installed)" in out
 
     # 2. No canonical-schema conformance warning. This regressed once
     #    (module-help.csv used after/before instead of

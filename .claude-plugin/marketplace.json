@@ -19,7 +19,7 @@
       "name": "bmad-module-bcp",
       "source": "./",
       "description": "DEPRECATED — BCP scoring moved to bmad-module-pulse. This module now ships only the migration path.",
-      "version": "0.1.12",
+      "version": "0.1.13",
       "author": {
         "name": "Nidelson Gimenez"
       },

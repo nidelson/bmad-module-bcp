@@ -55,16 +55,30 @@ Saídas BMAD:
 - Artefatos de teste → `_bmad-output/test-artifacts/`
 - Docs de projeto / ADRs → `docs/`
 
-## Localização — ADR 0001 (vinculante)
+## Localization — ADR 0002 (binding)
 
-`docs/ADR/0001-localization-strategy.md` define a política. Resumo operacional:
+`docs/ADR/0002-english-canonical.md` defines the policy. ADR 0001 is superseded —
+read it only to understand PT-BR prose written before 2026-08-07.
 
-- **EN inegociável:** identificadores de código (nomes de skill, slugs de agente, comandos `/bmad-bcp-*`), chaves YAML/frontmatter/JSON Schema, mensagens de Conventional Commits (apenas o type), nomes de branch, títulos de ADR. `CHANGELOG.md` tem estrutura EN (o `type` parseado) mas seções e conteúdo PT-BR. `ATTRIBUTION.md` é PT-BR canônico; sob MIT a exigência legal é preservar o aviso de copyright e o texto da licença.
-- **PT-BR canônico:** `README.md` (raiz, manual real default), guias de integração, docs de tech-refinement, corpo de ADR, diálogo do agente Bruno, mensagens de erro/prompts, notas de auditoria `bcp.history`.
-- `README.en.md` = casca EN mínima (vitrine + link para o `README.md` PT-BR).
-- Comunicação com o usuário em **Português do Brasil**; `document_output_language` da config = English (afeta artefatos estruturados, não a narrativa).
+**English is canonical.** Every artifact is authored in English: code
+identifiers, YAML keys and frontmatter, Conventional Commit messages (type *and*
+text), branch names, issue and PR titles and bodies, ADRs, `CHANGELOG.md`,
+`ATTRIBUTION.md`, integration guides, and the Bruno agent's dialogue, error
+messages and prompts.
 
-Commits seguem **Conventional Commits**: o **type em EN conforme a spec** (`feat`, `fix`, `docs`, `chore`, `refactor`, `perf`, `test`, `build`, `ci`, `style`, `revert`) — `release-please`/changelog parseiam o type e a estrutura. O **texto da mensagem (subject + body) pode ser PT-BR**. O changelog gerado refletirá o texto em PT-BR (aceito). Não é necessário anexar resumo EN em PRs.
+Portuguese exists only as a **translation** of reader-facing documents, tracking
+the English source. Edit the English first, then reflect it.
+
+Answering an issue in the language its author used is courtesy in a
+conversation, not a canonical artifact — it does not make Portuguese a source.
+
+Commits follow **Conventional Commits**, type per spec (`feat`, `fix`, `docs`,
+`chore`, `refactor`, `perf`, `test`, `build`, `ci`, `style`, `revert`) with the
+subject and body in English.
+
+Open items carried by ADR 0002: the `README.md` / `README.en.md` inversion,
+the Portuguese `changelog-sections` labels in `release-please-config.json`, and
+the remaining PT-BR prose in this file and across `docs/`.
 
 ## Fluxo Git — Trunk Based Development (vinculante)
 

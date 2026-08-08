@@ -64,22 +64,32 @@ courtesy in a conversation, not a canonical artifact.
 **Already done in the PR that introduces this ADR:** `ATTRIBUTION.md` translated;
 `CLAUDE.md` localization section rewritten to point here.
 
-**Deliberately not done, and still open:**
+**Deliberately not done, and cancelled rather than pending.** This module is
+being absorbed into `bmad-module-pulse` as an opt-in feature behind its
+`estimation_method` setting, and this repository will be archived — see
+nidelson/bmad-module-pulse#84. The following were scoped when this ADR was
+drafted and are no longer going to happen here:
 
-- `README.md` / `README.en.md` inversion. The current layout has the manual in
-  PT-BR at the root and a thin EN shell beside it. Inverting means translating
-  the full manual, not moving files — a change large enough to deserve its own
-  PR.
-- `release-please-config.json` still carries `changelog-sections` labels in
-  Portuguese (`Funcionalidades`, `Correções`, `Documentação`). Until it is
-  updated, generated changelogs mix Portuguese section headings with English
-  entries.
-- Existing PT-BR prose across `docs/` and skill workflows. Translating it is
-  incremental work; nothing breaks while it waits.
+- `README.md` / `README.en.md` inversion. Inverting means translating the full
+  manual, not moving files. The PULSE documentation supersedes it.
+- `release-please-config.json` `changelog-sections` labels in Portuguese
+  (`Funcionalidades`, `Correções`, `Documentação`). Changelogs generated from
+  here until archival will mix Portuguese headings with English entries. That is
+  accepted for the remaining lifetime of the repo.
+- Remaining PT-BR prose across `docs/` and skill workflows. The skills migrate
+  to PULSE, where the English-canonical policy applies to whatever is carried
+  over.
 
 **Not to be done:** rewriting git history or editing merged PR and issue bodies
 to conform. Commits and threads before 2026-08-07 were written under ADR 0001
 and are a correct record of their moment.
+
+**Why this ADR still stands in an archived repo.** `ATTRIBUTION.md` is written
+in English here while ADR 0001 says it should be in Portuguese. Without this
+record, a reader opening the archive later finds a file contradicting the
+policy that governed it, and no explanation. That is the whole reason this
+document is worth keeping — not the policy, which outlives the repo only
+through PULSE.
 
 ## Notes
 

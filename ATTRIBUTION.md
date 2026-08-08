@@ -1,67 +1,68 @@
-# Atribuição
+# Attribution
 
-## Framework Business Complexity Points (BCP) — MIT
+## Business Complexity Points (BCP) framework — MIT
 
-O **Business Complexity Points (BCP)** é um framework de normalização de
-complexidade de software criado pela **CI&T** (www.ciandt.com) em **2015**,
-adotado pelo **Itaú Unibanco** em 2018 e evoluído em parceria entre os dois.
+**Business Complexity Points (BCP)** is a software complexity normalization
+framework created by **CI&T** (www.ciandt.com) in **2015**, adopted by **Itaú
+Unibanco** in 2018 and evolved as a partnership between the two.
 
-Em **maio de 2026**, CI&T e Itaú publicaram o framework como open source sob
-**Licença MIT**:
+In **May 2026**, CI&T and Itaú published the framework as open source under the
+**MIT License**:
 
-- Repositório oficial: https://github.com/flow-ciandt/bcp-agent
-- Licença: MIT — `Copyright (c) 2025 CI&T HyperX`
-- Página institucional: https://ciandt.com/us/en-us/complexitypoints
-- Ruler canônico (imagem): https://dmwnh9nwzeoaa.cloudfront.net/2020-12/bcp-ruler.png
+- Official repository: https://github.com/flow-ciandt/bcp-agent
+- License: MIT — `Copyright (c) 2025 CI&T HyperX`
+- Institutional page: https://ciandt.com/us/en-us/complexitypoints
+- Canonical ruler (image): https://dmwnh9nwzeoaa.cloudfront.net/2020-12/bcp-ruler.png
 
-A régua normativa — perspectivas de complexidade, definições por tamanho,
-pontos Fibonacci e exemplos — está materializada no repositório oficial em
-`src/bcp/prompts/step0…step6.jinja2`, sob a mesma licença MIT.
+The normative ruler — complexity perspectives, per-size definitions, Fibonacci
+points and examples — is materialized in the official repository at
+`src/bcp/prompts/step0…step6.jinja2`, under the same MIT License.
 
-### O que a MIT exige
+### What MIT requires
 
-Preservar o aviso de copyright e o texto da licença nas cópias e nas partes
-substanciais do software. Este arquivo cumpre esse papel para a régua embarcada
-em `skills/bmad-bcp-rule-card/assets/bcp-rule.yaml`.
+Preserving the copyright notice and the license text in copies and in
+substantial portions of the software. This file serves that purpose for the
+ruler embedded in `skills/bmad-bcp-rule-card/assets/bcp-rule.yaml`.
 
-### O que mudou em relação à publicação anterior
+### What changed relative to the previous publication
 
-Até maio de 2026 o BCP circulava sob **CC BY-NC-ND 4.0**, e este módulo foi
-construído sobre aquela premissa. Três restrições daquela licença **não se
-aplicam à publicação MIT**:
+Until May 2026 BCP circulated under **CC BY-NC-ND 4.0**, and this module was
+built on that premise. Three restrictions of that license **do not apply to the
+MIT publication**:
 
-| Termo anterior         | Efeito no módulo                        | Situação sob MIT                        |
-| ---------------------- | --------------------------------------- | --------------------------------------- |
-| **ND** (SemDerivações) | Régua embarcada era legalmente imutável | Modificação permitida                   |
-| **NC** (NãoComercial)  | Uso comercial vedado                    | Uso comercial permitido                 |
-| **BY** (Atribuição)    | Aviso e link obrigatórios               | Copyright e licença seguem obrigatórios |
+| Previous term          | Effect on the module                    | Status under MIT                          |
+| ---------------------- | --------------------------------------- | ----------------------------------------- |
+| **ND** (NoDerivatives) | Embedded ruler was legally immutable    | Modification permitted                    |
+| **NC** (NonCommercial) | Commercial use forbidden                | Commercial use permitted                  |
+| **BY** (Attribution)   | Notice and link required                | Copyright and license remain required     |
 
-### A régua continua imutável — agora por decisão de projeto
+### The ruler stays immutable — now by project decision
 
-A imutabilidade de `bcp-rule.yaml` **deixou de ser imposição legal** e passa a
-ser **decisão de design deste módulo**, mantida pelo mesmo motivo prático de
-sempre: um score de BCP só é comparável entre times se a régua for a mesma.
-Editar elementos, definições ou pontos produz números que parecem BCP e não são.
+The immutability of `bcp-rule.yaml` **is no longer a legal constraint** and
+becomes a **design decision of this module**, kept for the same practical reason
+as always: a BCP score is only comparable across teams if the ruler is the same.
+Editing elements, definitions or points produces numbers that look like BCP and
+are not.
 
-Quem quiser divergir da régua canônica agora **pode**, legalmente. Mas deve
-fazê-lo alterando `rule_version` e assumindo que os scores resultantes não são
-comparáveis com os de outra instalação.
+Anyone wanting to diverge from the canonical ruler now **may**, legally. But
+they must do so by changing `rule_version` and accepting that the resulting
+scores are not comparable with those of another installation.
 
-Os blocos editoriais `hints` seguem mutáveis por natureza — são autorais deste
-módulo, não parte do framework da CI&T.
+The editorial `hints` blocks remain mutable by nature — they are authored by
+this module, not part of CI&T's framework.
 
-## Código do módulo — MIT
+## Module code — MIT
 
-O código-fonte do `bmad-module-bcp` (skills, scripts, schemas) é licenciado sob
-a Licença MIT (ver `LICENSE`).
+The source code of `bmad-module-bcp` (skills, scripts, schemas) is licensed
+under the MIT License (see `LICENSE`).
 
-**Com a republicação do framework, módulo e régua passam a compartilhar a mesma
-licença (MIT).** O split de licenças que antes era load-bearing no design deixou
-de existir.
+**With the republication of the framework, module and ruler now share the same
+license (MIT).** The license split that used to be load-bearing in the design no
+longer exists.
 
 ---
 
-_Verificação da mudança de licença feita em 2026-07-25 contra o `LICENSE` do
-repositório `flow-ciandt/bcp-agent` e o anúncio público de maio/2026. É
-alteração de postura jurídica — convém revisão humana antes de apoiar decisão
-comercial nela._
+_License change verified on 2026-07-25 against the `LICENSE` of the
+`flow-ciandt/bcp-agent` repository and the public announcement of May 2026. This
+is a legal-posture assessment — human review is advisable before relying on it
+for a commercial decision._

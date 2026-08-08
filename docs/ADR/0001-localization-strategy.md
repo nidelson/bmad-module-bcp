@@ -2,11 +2,16 @@
 
 | Campo | Valor |
 |---|---|
-| Status | Aceito |
+| Status | **Superseded** by [ADR 0002](0002-english-canonical.md) (2026-08-07) |
 | Data | 2026-05-08 |
 | Autor | Nidelson Gimenez |
 | Revisores | Paige (agente BMAD Tech Writer), Mary (agente BMAD Analyst) — rodada party-mode |
 | Substitui | — |
+
+> This ADR no longer governs. English is now canonical across the repository —
+> see [ADR 0002](0002-english-canonical.md). The text below is kept unedited as
+> the record of the decision that held from 2026-05-08 to 2026-08-07, and
+> explains the PT-BR prose you will find in artifacts from that period.
 
 ## Contexto
 
